@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Withdraw · Exodus</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0e2a;
+  --card:#161a3f;
+  --card2:#1d2148;
+  --border:rgba(120,90,255,.2);
+  --purple:#7b5cff;
+  --purple2:#5a3fd6;
+  --purple-light:#a68bff;
+  --text:#fff;
+  --sub:rgba(255,255,255,.55);
+  --sub2:rgba(255,255,255,.35);
+  --orange:#ff9000;
+  --green:#1cc464;
+  --red:#ff4d4d;
+  --yellow:#ffd700;
+  --radius:16px;
+  --radiusPill:999px;
+  --t:.2s cubic-bezier(.4,0,.2,1);
+  --shadow:0 8px 32px rgba(0,0,0,.35);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);}
+svg{display:block;}
+.hidden{display:none!important;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes popIn{0%{transform:scale(.8);opacity:0;}80%{transform:scale(1.04);}100%{transform:scale(1);opacity:1;}}
+@keyframes drawCheck{to{stroke-dashoffset:0;}}
+@keyframes spinRotate{to{transform:rotate(360deg);}}
+.spin-anim{animation:spinRotate .8s linear infinite;}
+
+/* ── TOPBAR ── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 18px 14px;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:20;
+}
+.tb-back{background:rgba(255,255,255,.1);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);flex-shrink:0;}
+.tb-back:hover{background:rgba(255,255,255,.18);}
+.tb-title{font-size:17px;font-weight:800;color:var(--text);}
+.tb-history{font-size:13px;font-weight:700;color:var(--purple-light);cursor:pointer;background:none;border:none;font-family:inherit;padding:6px 12px;border-radius:var(--radiusPill);border:1px solid rgba(123,92,255,.3);transition:var(--t);}
+.tb-history:hover{background:rgba(123,92,255,.15);}
+.tb-history.active{background:rgba(123,92,255,.25);color:#fff;}
+
+/* ── SCROLL AREA ── */
+.scroll{overflow-y:auto;height:calc(100vh - 62px);padding:16px 16px 36px;}
+
+/* ── BALANCE CARD ── */
+.bal-card{
+  background:linear-gradient(135deg,#3d2a9e 0%,var(--purple) 60%,#a68bff 100%);
+  border-radius:var(--radius);padding:20px 20px 18px;margin-bottom:14px;
+  position:relative;overflow:hidden;box-shadow:0 8px 28px rgba(123,92,255,.35);
+}
+.bal-card::before{content:'';position:absolute;right:-30px;top:-30px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.08);}
+.bal-card::after{content:'';position:absolute;left:-20px;bottom:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.06);}
+.bc-label{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:10px;position:relative;z-index:1;}
+.bc-amt-row{display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
+.bc-amt{font-size:36px;font-weight:900;color:#fff;letter-spacing:-1px;}
+.bc-refresh{background:rgba(255,255,255,.2);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;transition:var(--t);}
+.bc-refresh:hover{background:rgba(255,255,255,.3);}
+.bc-dots{margin-top:12px;display:flex;gap:4px;position:relative;z-index:1;}
+.bc-dot{width:7px;height:4px;border-radius:2px;background:rgba(255,255,255,.3);}
+.bc-dot.active{width:16px;background:#fff;}
+
+/* ── ARPAY BANNER ── */
+.arpay-card{
+  display:flex;align-items:center;gap:14px;
+  background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;margin-bottom:14px;
+}
+.arpay-logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#ff9000,#ffd700);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.arpay-info .ap-name{font-size:16px;font-weight:800;color:var(--text);}
+.arpay-info .ap-sub{font-size:12px;color:var(--sub);margin-top:2px;}
+
+/* ── METHOD TABS ── */
+.method-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.mth-btn{
+  background:var(--card2);border:1.5px solid var(--border);border-radius:var(--radius);
+  padding:14px 6px;text-align:center;cursor:pointer;transition:var(--t);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+}
+.mth-btn.active{background:rgba(123,92,255,.25);border-color:var(--purple);}
+.mth-btn .mth-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.mth-btn .mth-label{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.5px;}
+.mth-btn.active .mth-label{color:var(--text);}
+.icon-upi{background:linear-gradient(135deg,#ff9800,#ffd700);}
+.icon-bank{background:linear-gradient(135deg,var(--purple),var(--purple2));}
+.icon-usdt{background:linear-gradient(135deg,#26a17b,#1a7a5a);}
+
+/* ── UPI ACCOUNT CARD ── */
+.upi-account-card{
+  background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:14px;
+  cursor:pointer;transition:var(--t);
+}
+.upi-account-card:hover{border-color:var(--purple);}
+.uac-logo{background:linear-gradient(135deg,#ff9800,#ffd700);border-radius:8px;padding:5px 8px;font-size:10px;font-weight:900;color:#fff;letter-spacing:.5px;flex-shrink:0;}
+.uac-info{flex:1;}
+.uac-name{font-size:14px;font-weight:800;color:var(--text);}
+.uac-id{font-size:12px;color:var(--sub);margin-top:2px;}
+.uac-arrow{color:var(--sub);}
+
+/* ── AMOUNT SECTION ── */
+.amount-section{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 16px;margin-bottom:14px;}
+.amt-sec-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:var(--text);margin-bottom:14px;}
+.preset-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.preset-btn{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:12px 4px;text-align:center;
+  font-size:14px;font-weight:700;color:var(--sub);
+  cursor:pointer;transition:var(--t);font-family:inherit;
+}
+.preset-btn:hover{border-color:var(--purple-light);color:var(--text);}
+.preset-btn.selected{background:rgba(123,92,255,.25);border-color:var(--purple);color:#fff;box-shadow:0 0 0 2px rgba(123,92,255,.25);}
+.amt-input-row{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);
+  border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;transition:var(--t);
+}
+.amt-input-row:focus-within{border-color:var(--purple);background:rgba(123,92,255,.1);}
+.amt-rupee{font-size:20px;font-weight:800;color:var(--purple-light);flex-shrink:0;}
+.amt-input{flex:1;background:transparent;border:none;font-size:16px;font-family:inherit;color:var(--text);outline:none;}
+.amt-input::placeholder{color:rgba(255,255,255,.28);font-size:14px;}
+.amt-info-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+.ai-label{font-size:12px;color:var(--sub);}
+.ai-val{font-size:12px;font-weight:700;color:var(--orange);}
+.ai-val.green{color:var(--green);}
+.all-btn{background:rgba(123,92,255,.25);border:1px solid rgba(123,92,255,.4);border-radius:var(--radiusPill);padding:4px 12px;font-size:12px;font-weight:700;color:var(--purple-light);cursor:pointer;font-family:inherit;transition:var(--t);}
+.all-btn:hover{background:rgba(123,92,255,.4);}
+.received-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+
+/* ── WITHDRAW BTN ── */
+.withdraw-btn{
+  width:100%;padding:16px;margin-top:6px;
+  background:linear-gradient(135deg,var(--purple),var(--purple2));
+  border:none;border-radius:var(--radiusPill);
+  font-size:17px;font-weight:800;color:#fff;
+  cursor:pointer;font-family:inherit;
+  box-shadow:0 6px 22px rgba(123,92,255,.45);
+  transition:var(--t);display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.withdraw-btn:hover{filter:brightness(1.08);transform:translateY(-1px);}
+.withdraw-btn:active{transform:scale(.97);}
+.withdraw-btn:disabled{background:rgba(255,255,255,.1);box-shadow:none;cursor:not-allowed;transform:none;filter:none;color:rgba(255,255,255,.35);}
+
+/* ── STATUS TOAST ── */
+.toast{border-radius:12px;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;margin:10px 0;opacity:0;transform:translateY(4px);transition:var(--t);}
+.toast.show{opacity:1;transform:none;}
+.toast.error{background:rgba(255,77,77,.18);color:#ff8080;border:1px solid rgba(255,77,77,.3);}
+.toast.success{background:rgba(28,196,100,.18);color:#5ddf8a;border:1px solid rgba(28,196,100,.3);}
+
+/* ── HISTORY TAB ── */
+#historyView{animation:fadeUp .25s ease;}
+.rules-card{
+  background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 18px;margin-bottom:18px;
+}
+.rules-card .rc-title{font-size:13px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.rule-item{display:flex;gap:10px;font-size:13px;color:var(--sub);line-height:1.55;margin-bottom:8px;}
+.rule-item:last-child{margin-bottom:0;}
+.rule-dot{color:var(--purple-light);font-weight:800;flex-shrink:0;margin-top:1px;}
+.rule-item .highlight{color:var(--orange);font-weight:700;}
+
+.history-hdr{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800;color:var(--text);margin-bottom:14px;}
+.history-icon{width:38px;height:38px;background:var(--card2);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--purple-light);}
+.history-list{display:flex;flex-direction:column;gap:12px;margin-bottom:20px;}
+.hist-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;animation:fadeUp .3s ease;}
+.hist-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.wd-badge{background:var(--red);border-radius:var(--radiusPill);padding:5px 14px;font-size:12px;font-weight:800;color:#fff;}
+.wd-status-done{font-size:14px;font-weight:700;color:var(--green);}
+.wd-status-pending{font-size:14px;font-weight:700;color:var(--orange);}
+.hist-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.hist-row:last-child{border-bottom:none;}
+.hr-key{font-size:13px;color:var(--sub);}
+.hr-val{font-size:13px;font-weight:600;color:var(--text);}
+.hr-val.orange{color:var(--orange);}
+.hr-val.order{font-size:11px;color:var(--sub2);display:flex;align-items:center;gap:6px;}
+.copy-order-btn{background:none;border:none;cursor:pointer;color:var(--sub);padding:0;transition:var(--t);}
+.copy-order-btn:hover{color:var(--purple-light);}
+.hist-empty{text-align:center;padding:36px 20px;font-size:14px;color:var(--sub);background:var(--card2);border-radius:var(--radius);border:1.5px dashed rgba(255,255,255,.12);}
+.all-history-btn{width:100%;padding:14px;background:var(--card2);border:1.5px solid rgba(255,255,255,.15);border-radius:var(--radiusPill);font-size:14px;font-weight:700;color:rgba(255,255,255,.7);cursor:pointer;font-family:inherit;transition:var(--t);}
+.all-history-btn:hover{border-color:var(--purple-light);color:#fff;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="tb-back" onclick="window.history.back()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+  </button>
+  <div class="tb-title">Withdraw</div>
+  <button class="tb-history" id="historyToggleBtn" onclick="toggleHistory()">Withdrawal history</button>
+</div>
+
+<!-- ══ MAIN WITHDRAW VIEW ══ -->
+<div class="scroll" id="mainView">
+
+  <!-- Balance Card -->
+  <div class="bal-card">
+    <div class="bc-label">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+      Available balance
+    </div>
+    <div class="bc-amt-row">
+      <div class="bc-amt">₹<span id="balDisplay">0.00</span></div>
+      <button class="bc-refresh" id="refreshBtn" title="Refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+    </div>
+    <div class="bc-dots">
+      <div class="bc-dot"></div><div class="bc-dot"></div><div class="bc-dot"></div>
+      <div class="bc-dot"></div><div class="bc-dot"></div><div class="bc-dot active"></div>
+      <div class="bc-dot"></div><div class="bc-dot"></div><div class="bc-dot"></div>
+      <div class="bc-dot"></div><div class="bc-dot"></div>
+    </div>
+  </div>
+
+  <!-- ARPay Banner -->
+  <div class="arpay-card">
+    <div class="arpay-logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    </div>
+    <div class="arpay-info">
+      <div class="ap-name">ARPay</div>
+      <div class="ap-sub">Supports UPI for fast payment</div>
+    </div>
+  </div>
+
+  <!-- Method Tabs -->
+  <div class="method-tabs" id="methodTabs">
+    <div class="mth-btn active" data-method="upi">
+      <div class="mth-icon icon-upi">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      </div>
+      <div class="mth-label">UPI</div>
+    </div>
+    <div class="mth-btn" data-method="bank">
+      <div class="mth-icon icon-bank">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>
+      </div>
+      <div class="mth-label">BANK CARD</div>
+    </div>
+    <div class="mth-btn" data-method="usdt">
+      <div class="mth-icon icon-usdt">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8"/></svg>
+      </div>
+      <div class="mth-label">USDT</div>
+    </div>
+  </div>
+
+  <!-- UPI Account Row -->
+  <div class="upi-account-card" id="upiAccountCard">
+    <div class="uac-logo">UPI</div>
+    <div class="uac-info">
+      <div class="uac-name" id="uacName">MASARAT JAHA</div>
+      <div class="uac-id" id="uacId">masarat.jaha01@ptyes</div>
+    </div>
+    <div class="uac-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+  </div>
+
+  <!-- Amount Section -->
+  <div class="amount-section">
+    <div class="amt-sec-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+      Withdrawal Amount
+    </div>
+
+    <div class="preset-grid" id="presetGrid">
+      <button class="preset-btn" data-val="100">100</button>
+      <button class="preset-btn" data-val="5000">5K</button>
+      <button class="preset-btn" data-val="10000">10K</button>
+      <button class="preset-btn" data-val="15000">15K</button>
+      <button class="preset-btn" data-val="20000">20K</button>
+      <button class="preset-btn" data-val="30000">30K</button>
+      <button class="preset-btn" data-val="40000">40K</button>
+      <button class="preset-btn" data-val="50000">50K</button>
+    </div>
+
+    <div class="amt-input-row">
+      <div class="amt-rupee">₹</div>
+      <input class="amt-input" type="number" id="amtInput" placeholder="Please enter the amount" min="100">
+    </div>
+
+    <div class="amt-info-row">
+      <div>
+        <span class="ai-label">Withdrawable balance </span>
+        <span class="ai-val" id="withdrawableDisplay">₹0.00</span>
+      </div>
+      <button class="all-btn" id="allBtn">All</button>
+    </div>
+    <div class="received-row">
+      <span class="ai-label">Withdrawal amount received</span>
+      <span class="ai-val green" id="receivedDisplay">₹0.00</span>
+    </div>
+  </div>
+
+  <div class="toast" id="wdToast"></div>
+
+  <button class="withdraw-btn" id="wdBtn" disabled>Withdraw</button>
+
+</div><!-- /mainView -->
+
+<!-- ══ HISTORY VIEW ══ -->
+<div class="scroll hidden" id="historyView">
+
+  <!-- Rules -->
+  <div class="rules-card">
+    <div class="rc-title">Withdrawal Rules</div>
+    <div class="rule-item"><span class="rule-dot">◆</span><span>Inday Remaining Withdrawal Times <span class="highlight">3</span></span></div>
+    <div class="rule-item"><span class="rule-dot">◆</span><span>Withdrawal amount range <span class="highlight">₹100.00 – ₹50,000.00</span></span></div>
+    <div class="rule-item"><span class="rule-dot">◆</span><span>Please check your registered UPI / bank information again before making a withdrawal. If your registered information is incorrect, our company will not be responsible for any losses.</span></div>
+    <div class="rule-item"><span class="rule-dot">◆</span><span>If your registered information is incorrect, please contact customer service.</span></div>
+  </div>
+
+  <!-- History -->
+  <div class="history-hdr">
+    <div class="history-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+    Withdrawal history
+  </div>
+  <div class="history-list" id="historyList">
+    <div class="hist-empty">No withdrawal history yet.<br>Your completed withdrawals will appear here.</div>
+  </div>
+  <button class="all-history-btn" onclick="renderHistory(true)">All history</button>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const params=new URLSearchParams(window.location.search);
+  let balance=parseFloat(params.get('balance'))||0;
+  let storageKey=params.get('sk')||'wallet:default';
+  let wdHistory=[];
+  let selectedAmt=0;
+  let showAll=false;
+
+  // ── LOAD DATA ──
+  async function loadData(){
+    try{
+      const r=await window.storage.get(storageKey,false);
+      if(r&&r.value){
+        const d=JSON.parse(r.value);
+        balance=d.balance||balance;
+        wdHistory=(d.transactions||[]).filter(t=>t.type==='wd').map(t=>({...t,time:new Date(t.time)}));
+      }
+    }catch(e){}
+    updateBalDisplay();
+    renderHistory(false);
+  }
+
+  async function saveData(newBal,newTx){
+    try{
+      const r=await window.storage.get(storageKey,false);
+      let d={balance:0,depositTotal:0,commissionTotal:0,pendingWithdraw:0,transactions:[]};
+      if(r&&r.value) d=JSON.parse(r.value);
+      d.balance=newBal;
+      d.pendingWithdraw=(d.pendingWithdraw||0)+newTx.amount;
+      d.transactions=[...(d.transactions||[]),{...newTx,time:newTx.time.toISOString()}];
+      await window.storage.set(storageKey,JSON.stringify(d),false);
+
+      // pass result back to commission.html via localStorage
+      try{
+        const ex=JSON.parse(localStorage.getItem('exodus_pending_wd')||'[]');
+        ex.push({amount:newTx.amount,newBalance:newBal});
+        localStorage.setItem('exodus_pending_wd',JSON.stringify(ex));
+      }catch(e){}
+    }catch(e){console.error(e);}
+  }
+
+  function updateBalDisplay(){
+    $('balDisplay').textContent=balance.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+    $('withdrawableDisplay').textContent='₹'+balance.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+    updateReceived();
+  }
+
+  function updateReceived(){
+    const v=selectedAmt||parseFloat($('amtInput').value)||0;
+    $('receivedDisplay').textContent='₹'+v.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+    $('wdBtn').disabled=v<100||v>balance;
+  }
+
+  // ── PRESET BUTTONS ──
+  $('presetGrid').addEventListener('click',e=>{
+    const btn=e.target.closest('.preset-btn');
+    if(!btn) return;
+    selectedAmt=parseInt(btn.dataset.val);
+    document.querySelectorAll('.preset-btn').forEach(b=>b.classList.toggle('selected',b===btn));
+    $('amtInput').value=selectedAmt;
+    updateReceived();
+  });
+
+  $('amtInput').addEventListener('input',()=>{
+    selectedAmt=parseInt($('amtInput').value)||0;
+    document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('selected'));
+    const match=document.querySelector(`.preset-btn[data-val="${selectedAmt}"]`);
+    if(match) match.classList.add('selected');
+    updateReceived();
+  });
+
+  $('allBtn').addEventListener('click',()=>{
+    selectedAmt=Math.floor(balance);
+    $('amtInput').value=selectedAmt;
+    document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('selected'));
+    updateReceived();
+  });
+
+  // ── METHOD TABS ──
+  document.querySelectorAll('.mth-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.mth-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // ── REFRESH ──
+  $('refreshBtn').addEventListener('click',async()=>{
+    const btn=$('refreshBtn');
+    btn.querySelector('svg').style.animation='spinRotate .6s linear infinite';
+    await loadData();
+    setTimeout(()=>btn.querySelector('svg').style.animation='',700);
+  });
+
+  // ── ORDER NUMBER ──
+  function genOrder(){
+    const now=new Date();
+    const d=now.toISOString().replace(/[-T:.Z]/g,'').slice(0,17);
+    const rand=Math.floor(Math.random()*9000000000+1000000000);
+    return 'WD'+d+rand+'c';
+  }
+
+  // ── TOAST ──
+  function toast(msg,type){
+    const el=$('wdToast');
+    el.textContent=msg;
+    el.className='toast '+type;
+    void el.offsetWidth;
+    el.classList.add('show');
+    if(type!=='error') setTimeout(()=>el.classList.remove('show'),3000);
+  }
+
+  // ── SUBMIT WITHDRAWAL ──
+  $('wdBtn').addEventListener('click',async()=>{
+    const amt=parseFloat($('amtInput').value);
+    if(!amt||amt<100){toast('Minimum withdrawal is ₹100','error');return;}
+    if(amt>balance){toast('Insufficient balance','error');return;}
+
+    const btn=$('wdBtn');
+    const orig=btn.innerHTML;
+    btn.disabled=true;
+    btn.innerHTML='<svg class="spin-anim" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Processing...';
+    await new Promise(r=>setTimeout(r,800));
+
+    const newTx={
+      type:'wd',amount:amt,status:'pending',
+      time:new Date(),upi:$('uacId').textContent,
+      orderNo:genOrder()
+    };
+    balance=balance-amt;
+    wdHistory.unshift(newTx);
+    await saveData(balance,newTx);
+    updateBalDisplay();
+    renderHistory(false);
+
+    btn.innerHTML=orig;
+    btn.disabled=true;
+    $('amtInput').value='';
+    selectedAmt=0;
+    document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('selected'));
+    updateReceived();
+    toast('₹'+amt.toLocaleString('en-IN')+' withdrawal submitted — processing within 24h','success');
+  });
+
+  // ── RENDER HISTORY ──
+  window.renderHistory=function(all){
+    showAll=all;
+    const list=$('historyList');
+    const items=showAll?wdHistory:wdHistory.slice(0,5);
+    if(!items.length){
+      list.innerHTML='<div class="hist-empty">No withdrawal history yet.<br>Your completed withdrawals will appear here.</div>';
+      return;
+    }
+    list.innerHTML=items.map(tx=>{
+      const isDone=tx.status==='completed'||tx.status==='pending';
+      const statusClass=tx.status==='completed'?'wd-status-done':'wd-status-pending';
+      const statusText=tx.status==='completed'?'Completed':'Processing';
+      const timeStr=tx.time instanceof Date
+        ?tx.time.toISOString().replace('T',' ').slice(0,19)
+        :String(tx.time).slice(0,19);
+      return `<div class="hist-card">
+        <div class="hist-top">
+          <div class="wd-badge">Withdraw</div>
+          <div class="${statusClass}">${statusText}</div>
+        </div>
+        <div class="hist-row"><span class="hr-key">Balance</span><span class="hr-val orange">₹${tx.amount.toLocaleString('en-IN',{minimumFractionDigits:2})}</span></div>
+        <div class="hist-row"><span class="hr-key">Type</span><span class="hr-val">UPI</span></div>
+        <div class="hist-row"><span class="hr-key">Time</span><span class="hr-val">${timeStr}</span></div>
+        <div class="hist-row"><span class="hr-key">Order number</span>
+          <span class="hr-val order">${(tx.orderNo||'—').slice(0,28)}
+            <button class="copy-order-btn" onclick="copyOrder('${tx.orderNo||''}',this)" title="Copy">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </span>
+        </div>
+      </div>`;
+    }).join('');
+  };
+
+  window.copyOrder=function(order,btn){
+    if(navigator.clipboard) navigator.clipboard.writeText(order).then(()=>{
+      btn.style.color='var(--green)';
+      setTimeout(()=>btn.style.color='',1500);
+    });
+  };
+
+  // ── TOGGLE VIEW ──
+  window.toggleHistory=function(){
+    const isMain=!$('mainView').classList.contains('hidden');
+    $('mainView').classList.toggle('hidden',isMain);
+    $('historyView').classList.toggle('hidden',!isMain);
+    $('historyToggleBtn').classList.toggle('active',isMain);
+    $('historyToggleBtn').textContent=isMain?'← Back':'Withdrawal history';
+    if(isMain) renderHistory(false);
+  };
+
+  // ── INIT ──
+  loadData();
+
+})();
+</script>
+</body>
+</html>
