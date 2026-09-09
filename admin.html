@@ -514,6 +514,7 @@
                         if (user.pendingDepositAmount < 0) user.pendingDepositAmount = 0;
                         user.pendingDepositCount = (user.pendingDepositCount || 0) - 1;
                         if (user.pendingDepositCount < 0) user.pendingDepositCount = 0;
+                        user.hasDeposited = true;
                         toast('Deposit approved!', 'success');
                     } else {
                         dep.status = 'rejected';

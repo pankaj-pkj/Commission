@@ -246,6 +246,11 @@
                     <div class="w-avail">You will receive <span id="depCommPreview">8%</span> commission on this deposit.</div>
                     <button class="reg-btn" id="openDepositPageBtn" style="margin-top:14px;">Proceed to Pay</button>
                     <div class="toast-msg" id="depositStatus"></div>
+
+                    <div class="sec-label" style="margin-top:22px;font-weight:700;color:#64789e;text-transform:uppercase;font-size:11px;letter-spacing:1px;">Deposit History</div>
+                    <div class="tx-list" id="depositHistoryList">
+                        <div class="tx-empty">No deposit history yet.</div>
+                    </div>
                 </div>
             </div>
 
@@ -287,10 +292,21 @@
             <div class="page hidden" id="assetsPage">
                 <div class="page-hdr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Assets</div>
                 <div class="assets-grid">
+                    <div class="ast-item"><span class="ast-label">Wallet Balance</span><span class="ast-value green" id="assetBalance">₹ 0.00</span></div>
                     <div class="ast-item"><span class="ast-label">Quota (₹)</span><span class="ast-value" id="assetQuota">0.00</span></div>
                     <div class="ast-item"><span class="ast-label">Total Deposited</span><span class="ast-value" id="assetDeposited">₹ 0.00</span></div>
                     <div class="ast-item"><span class="ast-label">Commission Earned</span><span class="ast-value green" id="assetCommission">₹ 0.00</span></div>
                     <div class="ast-item"><span class="ast-label">Pending Withdrawals</span><span class="ast-value" id="assetPendingWd">₹ 0.00</span></div>
+                </div>
+                <div style="margin:20px 16px 0;background:#fff;border:1px solid #eef3ff;border-radius:20px;padding:16px 18px;display:flex;align-items:center;gap:12px;">
+                    <div style="width:40px;height:40px;border-radius:50%;background:#e8f4ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2a6aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-size:12px;color:#64789e;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Need Help? Contact Agent</div>
+                        <div style="font-size:15px;font-weight:800;color:#0a1a4a;margin-top:2px;">@Hackerrrrrrrrrrr_7493</div>
+                    </div>
+                    <a href="https://t.me/Hackerrrrrrrrrrr_7493" target="_blank" rel="noopener" style="background:#2a6aff;color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:999px;text-decoration:none;flex-shrink:0;">Chat</a>
                 </div>
             </div>
         </div>
@@ -351,6 +367,9 @@
         // ── RENDER ──
         function renderDashboard() {
             if (!userData) return;
+            if (!userData.hasDeposited && (userData.pendingDeposits || []).some(d => d.status === 'success')) {
+                userData.hasDeposited = true;
+            }
             $('displayUser').textContent = userData.username || 'User';
             $('userIdDisplay').textContent = userData.userId || '000000';
 
@@ -374,12 +393,21 @@
             const bal = userData.balance || 0;
             const pendingWd = userData.pendingWithdraw || 0;
             const availableForWithdraw = Math.max(0, bal - pendingWd);
-            $('wAvailLabel').textContent = 'Available: ₹' + availableForWithdraw.toFixed(2) + (pendingWd > 0 ? ' (₹' + pendingWd.toFixed(2) + ' pending)' : '');
+            const wAvailLabel = $('wAvailLabel');
+            if (!userData.hasDeposited) {
+                wAvailLabel.innerHTML = '⚠ Make at least 1 deposit to unlock withdrawals';
+                wAvailLabel.style.color = '#e02020';
+            } else {
+                wAvailLabel.textContent = 'Available: ₹' + availableForWithdraw.toFixed(2) + (pendingWd > 0 ? ' (₹' + pendingWd.toFixed(2) + ' pending)' : '');
+                wAvailLabel.style.color = '';
+            }
 
             renderUpiList();
             renderWithdrawHistory();
+            renderDepositHistory();
 
             $('assetQuota').textContent = quota.toFixed(2);
+            $('assetBalance').textContent = '₹ ' + (userData.balance || 0).toFixed(2);
             $('assetDeposited').textContent = '₹ ' + (userData.depositTotal || 0).toFixed(2);
             $('assetCommission').textContent = '₹ ' + (userData.commissionTotal || 0).toFixed(2);
             $('assetPendingWd').textContent = '₹ ' + (userData.pendingWithdraw || 0).toFixed(2);
@@ -449,6 +477,26 @@
                 </div><div class="tx-info"><div class="tx-title">Withdrawal</div><div class="tx-time">${tm}</div></div>
                 <div class="tx-right"><div class="tx-amt">-₹${(w.amount||0).toFixed(2)}</div>
                 <div class="tx-status ${stCls}">${stLbl}</div></div></div>`;
+            }).join('');
+        }
+
+        // ── DEPOSIT HISTORY ──
+        function renderDepositHistory() {
+            const deps = (userData.pendingDeposits || []).slice();
+            const list = $('depositHistoryList');
+            if (deps.length === 0) {
+                list.innerHTML = '<div class="tx-empty">No deposit history yet.</div>';
+                return;
+            }
+            list.innerHTML = deps.slice().reverse().map(d => {
+                const st = d.status === 'success' ? 'success' : d.status === 'rejected' ? 'rejected' : 'pending';
+                const stLbl = st === 'success' ? 'Success' : st === 'rejected' ? 'Rejected' : 'Processing';
+                const tm = d.time ? new Date(d.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '';
+                return `<div class="tx-item"><div class="tx-icon dep">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </div><div class="tx-info"><div class="tx-title">Deposit</div><div class="tx-time">${tm}</div></div>
+                <div class="tx-right"><div class="tx-amt">+₹${(d.amount||0).toFixed(2)}</div>
+                <div class="tx-status ${st}">${stLbl}</div></div></div>`;
             }).join('');
         }
 
@@ -525,6 +573,7 @@
         function handleWithdraw() {
             const upi = $('withdrawUpiSelect').value;
             const amt = parseFloat($('withdrawAmount').value);
+            if (!userData.hasDeposited) { toast('withdrawStatus', 'Complete at least one deposit before you can withdraw', 'error'); return; }
             if (!upi) { toast('withdrawStatus', 'Select a UPI ID', 'error'); return; }
             if (isNaN(amt) || amt < 100) { toast('withdrawStatus', 'Minimum withdrawal is ₹100', 'error'); return; }
             const availableForWithdraw = Math.max(0, (userData.balance || 0) - (userData.pendingWithdraw || 0));
@@ -689,6 +738,7 @@
             const db = getDB();
             if (db.users[phone]) { toast('registerStatus', 'This phone number is already registered', 'error'); return; }
 
+            const SIGNUP_BONUS = 100;
             db.users[phone] = {
                 phone: phone,
                 password: pass,
@@ -696,20 +746,27 @@
                 userId: genUserId(),
                 quota: 0,
                 todayEarnings: 0,
-                balance: 0,
+                balance: SIGNUP_BONUS,
                 depositTotal: 0,
                 commissionTotal: 0,
                 pendingWithdraw: 0,
                 pendingDepositAmount: 0,
                 pendingDepositCount: 0,
+                hasDeposited: false,
                 upiList: [],
-                transactions: [],
+                transactions: [{
+                    type: 'bonus',
+                    amount: SIGNUP_BONUS,
+                    status: 'success',
+                    time: new Date().toISOString(),
+                    note: 'Signup bonus'
+                }],
                 withdrawals: [],
                 pendingDeposits: []
             };
             saveDB(db);
-            toast('registerStatus', 'Account created! Logging you in…', 'success');
-            setTimeout(() => enterApp(phone), 600);
+            toast('registerStatus', 'Account created! ₹' + SIGNUP_BONUS + ' signup bonus credited. Logging you in…', 'success');
+            setTimeout(() => enterApp(phone), 800);
         });
 
         [$('loginPhone'), $('loginPassword')].forEach(el => {
