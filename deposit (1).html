@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Payment · XY PAY</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --blue-900:#0a1f5c;
+  --blue-700:#1a4fd6;
+  --blue-600:#2a6aff;
+  --blue-100:#e8f0fe;
+  --blue-50:#f4f8ff;
+  --white:#ffffff;
+  --ink:#0a1a4a;
+  --slate:#64789e;
+  --green:#189e46;
+  --green-bg:#e7faee;
+  --red:#e02020;
+  --red-bg:#fff0f0;
+  --radius-pill:999px;
+  --radius-card:18px;
+  --radius-inner:12px;
+  --shadow:0 8px 28px rgba(10,26,74,.13);
+  --shadow-btn:0 6px 18px rgba(42,106,255,.30);
+  --transition:0.2s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{font-size:16px;}
+body{background:var(--blue-50);font-family:'Inter','Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+svg{display:block;}
+
+/* ── TOPBAR ── */
+.topbar{width:100%;max-width:480px;background:linear-gradient(135deg,var(--blue-700),var(--blue-600));display:flex;align-items:center;justify-content:space-between;padding:14px 20px;box-shadow:0 3px 16px rgba(26,79,214,.3);position:sticky;top:0;z-index:10;}
+.topbar-title{font-size:17px;font-weight:700;color:#fff;letter-spacing:.2px;}
+.timer-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:var(--radius-pill);padding:6px 14px;font-size:15px;font-weight:800;color:#fff;letter-spacing:1px;}
+.timer-pill svg{flex-shrink:0;}
+.timer-pill.urgent{background:rgba(224,32,32,.25);border-color:rgba(224,32,32,.4);animation:pulseRed 1s ease infinite;}
+@keyframes pulseRed{0%,100%{opacity:1;}50%{opacity:.7;}}
+
+/* ── CONTENT ── */
+.content{width:100%;max-width:480px;padding:0 0 40px;}
+
+.amount-card{background:var(--white);margin:16px 16px 0;border-radius:var(--radius-card);padding:22px 20px 18px;box-shadow:var(--shadow);text-align:center;}
+.amount-label{font-size:13px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.amount-value{font-size:42px;font-weight:900;color:var(--blue-600);letter-spacing:-1.5px;line-height:1;}
+.amount-currency{font-size:28px;font-weight:800;}
+.amount-comm{display:inline-flex;align-items:center;gap:5px;background:var(--green-bg);color:var(--green);font-size:12px;font-weight:700;padding:4px 12px;border-radius:var(--radius-pill);margin-top:8px;}
+
+/* ── QR CARD ── */
+.qr-card{background:var(--white);margin:12px 16px 0;border-radius:var(--radius-card);padding:20px;box-shadow:var(--shadow);}
+.qr-instructions{font-size:14px;color:var(--slate);text-align:center;line-height:1.55;margin-bottom:16px;}
+.qr-instructions strong{color:var(--ink);}
+.qr-wrap{display:flex;justify-content:center;align-items:center;margin-bottom:14px;}
+.qr-inner{background:#fff;border:3px solid var(--blue-100);border-radius:14px;padding:12px;box-shadow:0 4px 16px rgba(10,26,74,.08);}
+.qr-warning{background:var(--red-bg);border:1.5px solid #fac8c8;border-radius:var(--radius-inner);padding:12px 14px;display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;}
+.qr-warning svg{flex-shrink:0;margin-top:1px;color:var(--red);}
+.qr-warning p{font-size:13px;font-weight:600;color:var(--red);line-height:1.5;}
+.save-btn{width:100%;padding:14px;background:var(--blue-600);border:none;border-radius:var(--radius-pill);font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--shadow-btn);transition:var(--transition);}
+.save-btn:hover{background:var(--blue-700);transform:translateY(-1px);}
+.save-btn:active{transform:scale(.97);}
+
+/* ── UPI ID strip ── */
+.upi-strip{background:var(--blue-50);border:1.5px dashed #b8cef0;border-radius:var(--radius-inner);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
+.upi-strip .us-label{font-size:11px;color:var(--slate);font-weight:600;margin-bottom:2px;}
+.upi-strip .us-val{font-size:14px;font-weight:700;color:var(--ink);word-break:break-all;}
+.copy-chip{background:var(--blue-600);border:none;border-radius:var(--radius-pill);padding:7px 14px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;font-family:inherit;transition:var(--transition);}
+.copy-chip:hover{background:var(--blue-700);}
+
+/* ── PAYMENT METHODS ── */
+.methods-card{background:var(--white);margin:12px 16px 0;border-radius:var(--radius-card);padding:18px 16px;box-shadow:var(--shadow);}
+.methods-title{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:14px;}
+.method-list{display:flex;flex-direction:column;gap:8px;}
+.method-item{display:flex;align-items:center;gap:12px;background:var(--blue-50);border:1.5px solid #e2ecfb;border-radius:var(--radius-inner);padding:12px 14px;cursor:pointer;transition:var(--transition);}
+.method-item:hover{border-color:var(--blue-600);background:var(--blue-100);}
+.method-item.selected{border-color:var(--blue-600);background:var(--blue-100);box-shadow:0 0 0 3px rgba(42,106,255,.12);}
+.method-logo{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:800;overflow:hidden;}
+.method-logo img{width:100%;height:100%;object-fit:contain;}
+.logo-paytm{background:#002970;color:#00baf2;}
+.logo-phonepe{background:#5f259f;color:#fff;}
+.logo-gpay{background:#fff;border:1px solid #e0e0e0;}
+.logo-bhim{background:#00529c;color:#fff;}
+.method-name{flex:1;font-size:15px;font-weight:700;color:var(--ink);}
+.method-sub{font-size:11px;color:var(--slate);margin-top:1px;}
+.method-arrow{color:var(--blue-600);}
+.method-selected-dot{width:18px;height:18px;border-radius:50%;background:var(--blue-600);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ── UTR SUBMIT ── */
+.utr-card{background:var(--white);margin:12px 16px 0;border-radius:var(--radius-card);padding:18px 16px;box-shadow:var(--shadow);}
+.utr-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.utr-title{font-size:15px;font-weight:800;color:var(--ink);}
+.guide-link{font-size:12px;font-weight:600;color:var(--blue-600);display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-family:inherit;}
+.utr-input-row{display:flex;align-items:center;gap:10px;background:var(--blue-50);border:1.5px solid #d7e4fb;border-radius:var(--radius-pill);padding:12px 16px;transition:var(--transition);}
+.utr-input-row:focus-within{border-color:var(--blue-600);background:#fff;box-shadow:0 0 0 4px rgba(42,106,255,.1);}
+.utr-input-row svg{flex-shrink:0;color:var(--slate);}
+.utr-req{font-size:13px;font-weight:700;color:var(--red);flex-shrink:0;}
+.utr-input-row input{flex:1;border:none;background:transparent;font-size:15px;font-family:inherit;color:var(--ink);outline:none;}
+.utr-input-row input::placeholder{color:#aabcd0;}
+.status-toast{border-radius:var(--radius-inner);padding:10px 14px;font-size:13px;font-weight:600;text-align:center;margin:10px 0;opacity:0;transform:translateY(4px);transition:var(--transition);}
+.status-toast.show{opacity:1;transform:none;}
+.status-toast.error{background:#fef0f0;color:var(--red);}
+.status-toast.success{background:var(--green-bg);color:var(--green);}
+.submit-btn{width:100%;margin-top:14px;padding:16px;background:linear-gradient(135deg,var(--blue-600),var(--blue-700));border:none;border-radius:var(--radius-pill);font-size:16px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;box-shadow:var(--shadow-btn);transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:8px;}
+.submit-btn:hover{filter:brightness(1.06);transform:translateY(-1px);}
+.submit-btn:active{transform:scale(.97);}
+.submit-btn:disabled{background:#b8cef0;box-shadow:none;cursor:not-allowed;transform:none;filter:none;}
+.secure-badge{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--slate);font-weight:500;margin-top:12px;}
+.secure-badge svg{color:var(--green);}
+
+/* ── SUCCESS SCREEN ── */
+#successScreen{display:none;padding:40px 28px;text-align:center;}
+.success-icon{width:72px;height:72px;border-radius:50%;background:var(--green-bg);border:2px solid #b0f0c8;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+@keyframes drawCheck{to{stroke-dashoffset:0;}}
+.success-title{font-size:22px;font-weight:800;color:var(--ink);margin-bottom:8px;}
+.success-sub{font-size:14px;color:var(--slate);line-height:1.6;margin-bottom:24px;}
+.success-detail{background:var(--blue-50);border:1px solid #d7e4fb;border-radius:var(--radius-inner);padding:14px 16px;text-align:left;margin-bottom:24px;}
+.sd-row{display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:4px 0;}
+.sd-row .sd-k{color:var(--slate);font-weight:500;}
+.sd-row .sd-v{font-weight:700;color:var(--ink);}
+.back-btn{width:100%;padding:15px;background:var(--blue-600);border:none;border-radius:var(--radius-pill);font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;box-shadow:var(--shadow-btn);}
+
+@keyframes spinRotate{to{transform:rotate(360deg);}}
+.spin-loader{animation:spinRotate .8s linear infinite;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button onclick="window.history.back()" style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+  </button>
+  <div class="topbar-title">Payment</div>
+  <div class="timer-pill" id="timerDisplay">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span id="timerText">07:00</span>
+  </div>
+</div>
+
+<!-- PAYMENT CONTENT -->
+<div class="content" id="paymentContent">
+
+  <!-- AMOUNT -->
+  <div class="amount-card">
+    <div class="amount-label">Amount Payable</div>
+    <div class="amount-value"><span class="amount-currency">₹</span><span id="amountDisplay">500</span></div>
+    <div class="amount-comm">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      <span id="commRateLabel">+8%</span> commission on credit
+    </div>
+  </div>
+
+  <!-- QR CARD -->
+  <div class="qr-card">
+    <div class="qr-instructions">
+      <strong>Please fill in UTR after successful payment</strong><br>
+      Use Mobile Scan QR To Pay
+    </div>
+
+    <!-- UPI ID strip -->
+    <div class="upi-strip">
+      <div><div class="us-label">UPI ID</div><div class="us-val" id="upiIdText">masarat.jaha01@ptyes</div></div>
+      <button class="copy-chip" id="copyUpiBtn">Copy</button>
+    </div>
+
+    <!-- QR Code -->
+    <div class="qr-wrap"><div class="qr-inner"><div id="qrcode"></div></div></div>
+
+    <div class="qr-warning">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p>Do not save QR codes for repeated payments, or the funds may not be credited.</p>
+    </div>
+
+    <button class="save-btn" id="saveQrBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Save QR Code
+    </button>
+  </div>
+
+  <!-- PAYMENT METHODS -->
+  <div class="methods-card">
+    <div class="methods-title">Choose a payment method to pay</div>
+    <div class="method-list" id="methodList">
+
+      <div class="method-item" data-method="paytm">
+        <div class="method-logo logo-paytm">
+          <svg width="28" height="14" viewBox="0 0 80 36" fill="none"><text x="2" y="28" font-size="28" font-family="Arial" font-weight="900" fill="#00baf2">p</text><text x="18" y="28" font-size="22" font-family="Arial" font-weight="700" fill="#ffffff">aytm</text></svg>
+        </div>
+        <div><div class="method-name">Paytm</div></div>
+        <div class="method-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+
+      <div class="method-item" data-method="phonepe">
+        <div class="method-logo logo-phonepe">
+          <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="50" fill="#5f259f"/><text x="50" y="68" text-anchor="middle" font-size="52" font-family="Arial" font-weight="900" fill="#fff">₱</text></svg>
+        </div>
+        <div><div class="method-name">PhonePe</div></div>
+        <div class="method-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+
+      <div class="method-item" data-method="phonepe-bank">
+        <div class="method-logo logo-phonepe">
+          <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="50" fill="#5f259f"/><text x="50" y="68" text-anchor="middle" font-size="52" font-family="Arial" font-weight="900" fill="#fff">₱</text></svg>
+        </div>
+        <div><div class="method-name">PhonePe Bank</div><div class="method-sub">Bank Cards Only</div></div>
+        <div class="method-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+
+      <div class="method-item" data-method="gpay">
+        <div class="method-logo logo-gpay" style="padding:4px;">
+          <svg width="34" height="34" viewBox="0 0 100 100"><text x="50" y="70" text-anchor="middle" font-size="52" font-family="Arial" font-weight="900" fill="#4285f4">G</text></svg>
+        </div>
+        <div><div class="method-name">Google Pay</div></div>
+        <div class="method-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+
+      <div class="method-item" data-method="bhim">
+        <div class="method-logo logo-bhim">
+          <svg width="34" height="34" viewBox="0 0 100 100"><text x="50" y="68" text-anchor="middle" font-size="36" font-family="Arial" font-weight="900" fill="#fff">BHIM</text></svg>
+        </div>
+        <div><div class="method-name">BHIM UPI</div></div>
+        <div class="method-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- UTR SUBMIT -->
+  <div class="utr-card">
+    <div class="utr-header">
+      <div class="utr-title">Paid? Submit UTR / Ref No</div>
+      <button class="guide-link" id="guideBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Guide
+      </button>
+    </div>
+    <div class="utr-input-row">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      <span class="utr-req">* UTR</span>
+      <input type="text" id="utrInput" placeholder="UTR/UPI Ref No/ UPI Transaction ID" autocomplete="off">
+    </div>
+    <div class="status-toast" id="utrToast"></div>
+    <button class="submit-btn" id="submitBtn">Submit UTR / Ref No</button>
+    <div class="secure-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10" stroke-width="2.5"/></svg>
+      This payment is secured by UPI APP Pay
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- SUCCESS SCREEN -->
+<div id="successScreen" style="width:100%;max-width:480px;padding:40px 28px;text-align:center;display:none;">
+  <div class="success-icon">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="8 12.5 11 15.5 16 9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="30" stroke-dashoffset="30" style="animation:drawCheck .6s ease forwards .2s;"/>
+    </svg>
+  </div>
+  <div class="success-title">Payment Submitted!</div>
+  <div class="success-sub">Your UTR has been submitted for verification.<br>Balance will be credited within a few minutes.</div>
+  <div class="success-detail">
+    <div class="sd-row"><span class="sd-k">Amount</span><span class="sd-v" id="s-amount">₹500</span></div>
+    <div class="sd-row" style="border-top:1px solid #e6edfb;margin-top:6px;padding-top:10px;"><span class="sd-k">Commission (8%)</span><span class="sd-v" id="s-comm" style="color:var(--green);">+₹40</span></div>
+    <div class="sd-row" style="border-top:1px solid #e6edfb;margin-top:6px;padding-top:10px;"><span class="sd-k">Total Credit</span><span class="sd-v" id="s-total" style="color:var(--blue-700);font-size:16px;">₹540</span></div>
+    <div class="sd-row"><span class="sd-k">UTR</span><span class="sd-v" id="s-utr" style="font-size:12px;">—</span></div>
+    <div class="sd-row"><span class="sd-k">Status</span><span class="sd-v" style="color:var(--green);">Submitted</span></div>
+  </div>
+  <button class="back-btn" onclick="window.history.back()">Back to Home</button>
+</div>
+
+<!-- EXPIRED SCREEN -->
+<div id="expiredScreen" style="width:100%;max-width:480px;padding:40px 28px;text-align:center;display:none;">
+  <div style="width:64px;height:64px;border-radius:50%;background:var(--red-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+  </div>
+  <div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:8px;">Session Expired</div>
+  <div style="font-size:14px;color:var(--slate);margin-bottom:24px;">This payment link has expired.<br>Please go back and start a new deposit.</div>
+  <button class="back-btn" onclick="window.history.back()">Go Back</button>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+
+  // ── LOAD SETTINGS SET BY ADMIN (fallback to defaults) ──
+  function getSettings(){
+    try{
+      const raw=localStorage.getItem('exodus_settings');
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return { upiId:'masarat.jaha01@ptyes', commissionRate:8 };
+  }
+  const settings=getSettings();
+  const UPI_ID=settings.upiId||'masarat.jaha01@ptyes';
+  const COMMISSION=(settings.commissionRate!=null?settings.commissionRate:8)/100;
+  const TIMER_SECS=7*60;
+
+  // ── PARSE AMOUNT / PHONE FROM URL ──
+  const params=new URLSearchParams(window.location.search);
+  const amount=parseInt(params.get('amount'))||500;
+  const phone=params.get('phone')||'';
+  const comm=Math.floor(amount*COMMISSION);
+  const total=amount+comm;
+
+  $('amountDisplay').textContent=amount.toLocaleString('en-IN');
+  $('upiIdText').textContent=UPI_ID;
+  $('commRateLabel').textContent='+'+(COMMISSION*100)+'%';
+
+  // ── GENERATE QR ──
+  const upiString='upi://pay?pa='+UPI_ID+'&pn=XY+PAY&am='+amount+'&cu=INR&tn=Deposit';
+  new QRCode($('qrcode'),{
+    text:upiString,
+    width:180,
+    height:180,
+    colorDark:'#0a1a4a',
+    colorLight:'#ffffff',
+    correctLevel:QRCode.CorrectLevel.H
+  });
+
+  // ── COPY UPI ──
+  $('copyUpiBtn').addEventListener('click',()=>{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(UPI_ID).then(()=>{
+        $('copyUpiBtn').textContent='Copied!';
+        setTimeout(()=>$('copyUpiBtn').textContent='Copy',2000);
+      });
+    } else {
+      const ta=document.createElement('textarea');
+      ta.value=UPI_ID;document.body.appendChild(ta);ta.select();
+      document.execCommand('copy');document.body.removeChild(ta);
+      $('copyUpiBtn').textContent='Copied!';
+      setTimeout(()=>$('copyUpiBtn').textContent='Copy',2000);
+    }
+  });
+
+  // ── TIMER ──
+  let remaining=TIMER_SECS;
+  const timerEl=$('timerText');
+  const timerPill=$('timerDisplay');
+  const tick=setInterval(()=>{
+    remaining--;
+    const m=Math.floor(remaining/60);
+    const s=remaining%60;
+    timerEl.textContent=(m<10?'0'+m:m)+':'+(s<10?'0'+s:s);
+    if(remaining<=60) timerPill.classList.add('urgent');
+    if(remaining<=0){
+      clearInterval(tick);
+      $('paymentContent').style.display='none';
+      $('expiredScreen').style.display='block';
+    }
+  },1000);
+
+  // ── SAVE QR ──
+  $('saveQrBtn').addEventListener('click',()=>{
+    const canvas=$('qrcode').querySelector('canvas');
+    if(!canvas){alert('QR not ready yet, please wait a moment.');return;}
+    const link=document.createElement('a');
+    link.download='xypay-payment-qr.png';
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+  });
+
+  // ── PAYMENT METHODS ──
+  let selectedMethod='';
+  document.querySelectorAll('.method-item').forEach(item=>{
+    item.addEventListener('click',()=>{
+      document.querySelectorAll('.method-item').forEach(m=>m.classList.remove('selected'));
+      item.classList.add('selected');
+      selectedMethod=item.dataset.method;
+      $('utrInput').focus();
+    });
+  });
+
+  // ── TOAST ──
+  function toast(id,msg,type){
+    const el=$(id);
+    el.textContent=msg;
+    el.className='status-toast '+type;
+    void el.offsetWidth;
+    el.classList.add('show');
+    if(type!=='error') setTimeout(()=>el.classList.remove('show'),3000);
+  }
+
+  // ── GUIDE ──
+  $('guideBtn').addEventListener('click',()=>{
+    alert('How to find UTR:\n\n1. Open your bank / UPI app\n2. Go to Transaction History\n3. Find this payment\n4. Copy the 12-digit UTR or UPI Ref No\n5. Paste it here and submit');
+  });
+
+  // ── SUBMIT UTR ──
+  $('submitBtn').addEventListener('click',async()=>{
+    const utr=$('utrInput').value.trim();
+    if(!utr){toast('utrToast','Please enter your UTR / reference number','error');return;}
+    if(!/^[a-zA-Z0-9]{6,22}$/.test(utr)){toast('utrToast','UTR looks invalid — check your bank SMS or app','error');return;}
+
+    const btn=$('submitBtn');
+    const orig=btn.innerHTML;
+    btn.disabled=true;
+    btn.innerHTML='<svg class="spin-loader" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Verifying...';
+
+    await new Promise(res=>setTimeout(res,1100));
+
+    // ── store result for parent window if opened via window.open ──
+    try{
+      if(window.opener && window.opener.onDepositSuccess){
+        window.opener.onDepositSuccess({amount,comm,total,utr});
+      }
+    }catch(e){}
+
+    // ── pass back via localStorage so commission.html can pick it up ──
+    try{
+      const existing=JSON.parse(localStorage.getItem('exodus_pending_deposit')||'[]');
+      existing.push({amount,comm,total,utr,phone,time:new Date().toISOString(),status:'submitted'});
+      localStorage.setItem('exodus_pending_deposit',JSON.stringify(existing));
+    }catch(e){}
+
+    clearInterval(tick);
+    btn.disabled=false;
+    btn.innerHTML=orig;
+
+    // show success
+    $('paymentContent').style.display='none';
+    $('s-amount').textContent='₹'+amount.toLocaleString('en-IN');
+    $('s-comm').textContent='+₹'+comm.toLocaleString('en-IN');
+    $('s-total').textContent='₹'+total.toLocaleString('en-IN');
+    $('s-utr').textContent=utr;
+    $('successScreen').style.display='block';
+    window.scrollTo(0,0);
+  });
+
+})();
+</script>
+</body>
+</html>

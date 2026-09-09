@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin · XY PAY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f4f8ff;
+            padding: 20px;
+            color: #0a1a4a;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(10, 26, 74, .10);
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .sub {
+            color: #64789e;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .login-box {
+            max-width: 400px;
+            margin: 80px auto;
+            padding: 32px;
+            background: #fff;
+            border-radius: 28px;
+            box-shadow: 0 10px 40px rgba(10, 26, 74, .12);
+        }
+        .login-box h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1.5px solid #d7e4fb;
+            border-radius: 999px;
+            font-size: 15px;
+            margin-bottom: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: 0.2s;
+        }
+        .login-box input:focus {
+            border-color: #2a6aff;
+            box-shadow: 0 0 0 4px rgba(42, 106, 255, .10);
+        }
+        .login-box button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #2a6aff, #1a4fd6);
+            border: none;
+            border-radius: 999px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            box-shadow: 0 6px 18px rgba(42, 106, 255, .32);
+            transition: 0.2s;
+        }
+        .login-box button:hover {
+            filter: brightness(1.05);
+            transform: translateY(-1px);
+        }
+        .login-box .error {
+            color: #e02020;
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-item {
+            background: #f4f8ff;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-item .num {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1a4fd6;
+        }
+        .stat-item .label {
+            font-size: 12px;
+            color: #64789e;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .admin-table th {
+            text-align: left;
+            padding: 10px 8px;
+            border-bottom: 2px solid #e6edfb;
+            color: #64789e;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .admin-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #eef3ff;
+            vertical-align: middle;
+        }
+        .admin-table tr:hover td {
+            background: #f8faff;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge.pending {
+            background: #fff8ec;
+            color: #b06000;
+        }
+        .badge.success {
+            background: #e7faee;
+            color: #189e46;
+        }
+        .badge.rejected {
+            background: #fff0f0;
+            color: #e02020;
+        }
+        .action-btn {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.2s;
+            margin: 0 3px;
+        }
+        .action-btn.approve {
+            background: #189e46;
+            color: #fff;
+        }
+        .action-btn.approve:hover {
+            background: #0f7a34;
+        }
+        .action-btn.reject {
+            background: #e02020;
+            color: #fff;
+        }
+        .action-btn.reject:hover {
+            background: #b01818;
+        }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .tab-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-bar button {
+            padding: 8px 20px;
+            border: 1.5px solid #d7e4fb;
+            border-radius: 999px;
+            background: #fff;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.2s;
+            color: #64789e;
+        }
+        .tab-bar button.active {
+            background: #2a6aff;
+            color: #fff;
+            border-color: #2a6aff;
+        }
+        .tab-bar button:hover:not(.active) {
+            border-color: #2a6aff;
+            color: #0a1a4a;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #e02020;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            float: right;
+            margin-top: 4px;
+        }
+        .logout-btn:hover {
+            text-decoration: underline;
+        }
+        .auth-field-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64789e;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            margin-bottom: 6px;
+        }
+        #settingsTab input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid #d7e4fb;
+            border-radius: 999px;
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: 0.2s;
+        }
+        #settingsTab input:focus {
+            border-color: #2a6aff;
+            box-shadow: 0 0 0 4px rgba(42, 106, 255, .10);
+        }
+        @media(max-width:600px) {
+            .admin-table {
+                font-size: 12px;
+            }
+            .admin-table th,
+            .admin-table td {
+                padding: 8px 4px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div id="loginBox" class="login-box">
+            <h2 style="display:flex;align-items:center;gap:10px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2a6aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Admin Login
+            </h2>
+            <input type="text" id="adminUser" placeholder="Username" value="admin" />
+            <input type="password" id="adminPass" placeholder="Password" value="admin123" />
+            <button id="adminLoginBtn">Login</button>
+            <div id="adminLoginError" class="error"></div>
+        </div>
+
+        <div id="dashboard" class="hidden">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <h1 style="display:flex;align-items:center;gap:12px;">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a4fd6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                    Admin Panel
+                </h1>
+                <button class="logout-btn" id="logoutBtn">Logout</button>
+            </div>
+            <div class="sub">Manage deposits, withdrawals, users, and payment settings</div>
+
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-item"><div class="num" id="totalUsers">0</div><div class="label">Total Users</div></div>
+                <div class="stat-item"><div class="num" id="totalBalance">₹0</div><div class="label">Total Balance</div></div>
+                <div class="stat-item"><div class="num" id="pendingDeposits">0</div><div class="label">Pending Deposits</div></div>
+                <div class="stat-item"><div class="num" id="pendingWithdrawals">0</div><div class="label">Pending Withdrawals</div></div>
+            </div>
+
+            <div class="tab-bar">
+                <button class="active" data-tab="pending">Pending Approvals</button>
+                <button data-tab="users">All Users</button>
+                <button data-tab="settings">Payment Settings</button>
+            </div>
+
+            <div id="pendingTab" class="card">
+                <h3 style="font-size:18px;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a1a4a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Pending Deposits & Withdrawals
+                </h3>
+                <div id="pendingList"></div>
+            </div>
+
+            <div id="usersTab" class="card hidden">
+                <h3 style="font-size:18px;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a1a4a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Registered Users
+                </h3>
+                <div id="usersList"></div>
+            </div>
+
+            <div id="settingsTab" class="card hidden">
+                <h3 style="font-size:18px;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a1a4a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    Payment Settings
+                </h3>
+                <div class="sub" style="margin-bottom:16px;">This UPI ID and commission rate are used to generate the deposit QR code shown to users.</div>
+                <div class="auth-field-label">Receiving UPI ID</div>
+                <input type="text" id="settingsUpiId" placeholder="name@bank" />
+                <div class="auth-field-label" style="margin-top:14px;">Commission Rate (%)</div>
+                <input type="number" id="settingsCommission" placeholder="8" min="0" max="100" step="0.1" />
+                <button id="saveSettingsBtn" style="margin-top:18px;width:100%;padding:14px;background:linear-gradient(135deg,#2a6aff,#1a4fd6);border:none;border-radius:999px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const DB_KEY = 'exodus_db';
+            const ADMIN_CRED = { username: 'admin', password: 'admin123' };
+            const $ = id => document.getElementById(id);
+            const loginBox = $('loginBox');
+            const dashboard = $('dashboard');
+            const adminLoginBtn = $('adminLoginBtn');
+            const adminUser = $('adminUser');
+            const adminPass = $('adminPass');
+            const adminLoginError = $('adminLoginError');
+            const logoutBtn = $('logoutBtn');
+            const totalUsers = $('totalUsers');
+            const totalBalance = $('totalBalance');
+            const pendingDeposits = $('pendingDeposits');
+            const pendingWithdrawals = $('pendingWithdrawals');
+            const pendingList = $('pendingList');
+            const usersList = $('usersList');
+
+            function getDB() {
+                try {
+                    const raw = localStorage.getItem(DB_KEY);
+                    return raw ? JSON.parse(raw) : { users: {}, currentPhone: null };
+                } catch { return { users: {}, currentPhone: null }; }
+            }
+
+            function saveDB(db) {
+                localStorage.setItem(DB_KEY, JSON.stringify(db));
+            }
+
+            // ── PAYMENT SETTINGS ──
+            const SETTINGS_KEY = 'exodus_settings';
+            const settingsUpiId = $('settingsUpiId');
+            const settingsCommission = $('settingsCommission');
+            const saveSettingsBtn = $('saveSettingsBtn');
+
+            function getSettings() {
+                try {
+                    const raw = localStorage.getItem(SETTINGS_KEY);
+                    if (raw) return JSON.parse(raw);
+                } catch (e) {}
+                return { upiId: 'masarat.jaha01@ptyes', commissionRate: 8 };
+            }
+            function saveSettings(settings) {
+                localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+            }
+            function loadSettingsIntoForm() {
+                const s = getSettings();
+                settingsUpiId.value = s.upiId || '';
+                settingsCommission.value = (s.commissionRate != null ? s.commissionRate : 8);
+            }
+            saveSettingsBtn.addEventListener('click', function() {
+                const upiId = settingsUpiId.value.trim();
+                const rate = parseFloat(settingsCommission.value);
+                if (!/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(upiId)) {
+                    toast('Enter a valid UPI ID (e.g. name@bank)', 'error');
+                    return;
+                }
+                if (isNaN(rate) || rate < 0 || rate > 100) {
+                    toast('Enter a valid commission rate', 'error');
+                    return;
+                }
+                saveSettings({ upiId: upiId, commissionRate: rate });
+                toast('Payment settings saved!', 'success');
+            });
+
+            function renderStats(db) {
+                const users = Object.values(db.users);
+                totalUsers.textContent = users.length;
+                const totalBal = users.reduce((sum, u) => sum + (u.balance || 0), 0);
+                totalBalance.textContent = '₹' + totalBal.toLocaleString('en-IN');
+                let pendDep = 0,
+                    pendWd = 0;
+                users.forEach(u => {
+                    if (u.pendingDeposits) pendDep += u.pendingDeposits.filter(d => d.status === 'pending').length;
+                    if (u.withdrawals) pendWd += u.withdrawals.filter(w => w.status === 'pending').length;
+                });
+                pendingDeposits.textContent = pendDep;
+                pendingWithdrawals.textContent = pendWd;
+            }
+
+            function renderPending(db) {
+                const users = Object.values(db.users);
+                let html = '';
+                let hasPending = false;
+                users.forEach(u => {
+                    if (u.pendingDeposits) {
+                        u.pendingDeposits.forEach((d, idx) => {
+                            if (d.status === 'pending') {
+                                hasPending = true;
+                                html += `<div style="border-bottom:1px solid #eef3ff;padding:12px 0;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;">
+                                    <div>
+                                        <strong>${u.phone}</strong> — Deposit ₹${d.amount.toFixed(2)} + comm ₹${d.commission||0}
+                                        <br><small>UTR: ${d.utr} | ${new Date(d.time).toLocaleString()}</small>
+                                    </div>
+                                    <div>
+                                        <button class="action-btn approve" data-phone="${u.phone}" data-type="deposit" data-idx="${idx}">Approve</button>
+                                        <button class="action-btn reject" data-phone="${u.phone}" data-type="deposit" data-idx="${idx}">Reject</button>
+                                    </div>
+                                </div>`;
+                            }
+                        });
+                    }
+                    if (u.withdrawals) {
+                        u.withdrawals.forEach((w, idx) => {
+                            if (w.status === 'pending') {
+                                hasPending = true;
+                                html += `<div style="border-bottom:1px solid #eef3ff;padding:12px 0;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;">
+                                    <div>
+                                        <strong>${u.phone}</strong> — Withdrawal ₹${w.amount.toFixed(2)}
+                                        <br><small>UPI: ${w.upi} | ${new Date(w.time).toLocaleString()}</small>
+                                    </div>
+                                    <div>
+                                        <button class="action-btn approve" data-phone="${u.phone}" data-type="withdrawal" data-idx="${idx}">Approve</button>
+                                        <button class="action-btn reject" data-phone="${u.phone}" data-type="withdrawal" data-idx="${idx}">Reject</button>
+                                    </div>
+                                </div>`;
+                            }
+                        });
+                    }
+                });
+                if (!hasPending) html = '<p style="color:#64789e;">No pending requests.</p>';
+                pendingList.innerHTML = html;
+
+                pendingList.querySelectorAll('.action-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const phone = this.dataset.phone;
+                        const type = this.dataset.type;
+                        const idx = parseInt(this.dataset.idx);
+                        const action = this.classList.contains('approve') ? 'approve' : 'reject';
+                        handleAction(phone, type, idx, action);
+                    });
+                });
+            }
+
+            function renderUsers(db) {
+                const users = Object.values(db.users);
+                if (users.length === 0) {
+                    usersList.innerHTML = '<p style="color:#64789e;">No users registered yet.</p>';
+                    return;
+                }
+                let html =
+                    `<table class="admin-table"><thead><tr><th>Phone</th><th>Balance</th><th>Deposited</th><th>Commission</th><th>Pending Wd</th><th>Actions</th></tr></thead><tbody>`;
+                users.forEach(u => {
+                    html += `<tr>
+                        <td><strong>${u.phone}</strong></td>
+                        <td>₹${(u.balance||0).toFixed(2)}</td>
+                        <td>₹${(u.depositTotal||0).toFixed(2)}</td>
+                        <td>₹${(u.commissionTotal||0).toFixed(2)}</td>
+                        <td>₹${(u.pendingWithdraw||0).toFixed(2)}</td>
+                        <td><button class="action-btn" style="background:#2a6aff;color:#fff;" onclick="alert('User: ${u.phone}\nBalance: ₹${(u.balance||0).toFixed(2)}\nDeposits: ${(u.transactions||[]).filter(t=>t.type==='dep').length}\nWithdrawals: ${(u.transactions||[]).filter(t=>t.type==='wd').length}')">Details</button></td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                usersList.innerHTML = html;
+            }
+
+            function handleAction(phone, type, idx, action) {
+                const db = getDB();
+                const user = db.users[phone];
+                if (!user) return;
+
+                if (type === 'deposit') {
+                    const dep = user.pendingDeposits[idx];
+                    if (!dep || dep.status !== 'pending') return;
+                    if (action === 'approve') {
+                        const amt = dep.amount;
+                        const comm = dep.commission || Math.floor(amt * 0.08);
+                        const total = amt + comm;
+                        user.balance = (user.balance || 0) + total;
+                        user.depositTotal = (user.depositTotal || 0) + amt;
+                        user.commissionTotal = (user.commissionTotal || 0) + comm;
+                        dep.status = 'success';
+                        const tx = user.transactions.find(t => t.utr === dep.utr && t.type === 'dep' && t.status ===
+                            'pending');
+                        if (tx) tx.status = 'success';
+                        // Update pending stats
+                        user.pendingDepositAmount = (user.pendingDepositAmount || 0) - amt;
+                        if (user.pendingDepositAmount < 0) user.pendingDepositAmount = 0;
+                        user.pendingDepositCount = (user.pendingDepositCount || 0) - 1;
+                        if (user.pendingDepositCount < 0) user.pendingDepositCount = 0;
+                        toast('Deposit approved!', 'success');
+                    } else {
+                        dep.status = 'rejected';
+                        const tx = user.transactions.find(t => t.utr === dep.utr && t.type === 'dep' && t.status ===
+                            'pending');
+                        if (tx) tx.status = 'rejected';
+                        user.pendingDepositAmount = (user.pendingDepositAmount || 0) - dep.amount;
+                        if (user.pendingDepositAmount < 0) user.pendingDepositAmount = 0;
+                        user.pendingDepositCount = (user.pendingDepositCount || 0) - 1;
+                        if (user.pendingDepositCount < 0) user.pendingDepositCount = 0;
+                        toast('Deposit rejected.', 'info');
+                    }
+                } else if (type === 'withdrawal') {
+                    const wd = user.withdrawals[idx];
+                    if (!wd || wd.status !== 'pending') return;
+                    if (action === 'approve') {
+                        const amt = wd.amount;
+                        if ((user.balance || 0) < amt) {
+                            toast('Insufficient balance to approve!', 'error');
+                            return;
+                        }
+                        user.balance = (user.balance || 0) - amt;
+                        user.pendingWithdraw = (user.pendingWithdraw || 0) - amt;
+                        if (user.pendingWithdraw < 0) user.pendingWithdraw = 0;
+                        wd.status = 'success';
+                        const tx = user.transactions.find(t => t.upi === wd.upi && t.type === 'wd' && t.status ===
+                            'pending');
+                        if (tx) tx.status = 'success';
+                        toast('Withdrawal approved!', 'success');
+                    } else {
+                        wd.status = 'rejected';
+                        user.pendingWithdraw = (user.pendingWithdraw || 0) - wd.amount;
+                        if (user.pendingWithdraw < 0) user.pendingWithdraw = 0;
+                        const tx = user.transactions.find(t => t.upi === wd.upi && t.type === 'wd' && t.status ===
+                            'pending');
+                        if (tx) tx.status = 'rejected';
+                        toast('Withdrawal rejected.', 'info');
+                    }
+                }
+                saveDB(db);
+                refreshDashboard();
+            }
+
+            function toast(msg, type) {
+                const el = document.createElement('div');
+                const bg = type === 'success' ? '#189e46' : type === 'error' ? '#e02020' : '#2a6aff';
+                el.style.cssText =
+                    `position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:${bg};color:#fff;padding:12px 24px;border-radius:999px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,0.2);z-index:9999;`;
+                el.textContent = msg;
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 2500);
+            }
+
+            function refreshDashboard() {
+                const db = getDB();
+                renderStats(db);
+                renderPending(db);
+                renderUsers(db);
+            }
+
+            document.querySelectorAll('.tab-bar button').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-bar button').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    const target = this.dataset.tab;
+                    document.getElementById('pendingTab').classList.toggle('hidden', target !== 'pending');
+                    document.getElementById('usersTab').classList.toggle('hidden', target !== 'users');
+                    document.getElementById('settingsTab').classList.toggle('hidden', target !== 'settings');
+                    if (target === 'settings') loadSettingsIntoForm();
+                });
+            });
+
+            adminLoginBtn.addEventListener('click', function() {
+                const user = adminUser.value.trim();
+                const pass = adminPass.value.trim();
+                if (user === ADMIN_CRED.username && pass === ADMIN_CRED.password) {
+                    loginBox.classList.add('hidden');
+                    dashboard.classList.remove('hidden');
+                    refreshDashboard();
+                    adminLoginError.textContent = '';
+                } else {
+                    adminLoginError.textContent = 'Invalid username or password.';
+                }
+            });
+
+            logoutBtn.addEventListener('click', function() {
+                dashboard.classList.add('hidden');
+                loginBox.classList.remove('hidden');
+                adminUser.value = 'admin';
+                adminPass.value = 'admin123';
+                adminLoginError.textContent = '';
+            });
+
+            adminPass.addEventListener('keydown', e => { if (e.key === 'Enter') adminLoginBtn.click(); });
+            adminUser.addEventListener('keydown', e => { if (e.key === 'Enter') adminLoginBtn.click(); });
+        })();
+    </script>
+</body>
+</html>

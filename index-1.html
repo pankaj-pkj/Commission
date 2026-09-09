@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>XY PAY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ── BASE ── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f4f8ff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 12px 8px 32px; }
+        .app { width: 100%; max-width: 420px; background: #ffffff; border-radius: 32px; box-shadow: 0 10px 40px rgba(10,26,74,.14); overflow: hidden; }
+        .hidden { display: none !important; }
+
+        /* ── TOAST ── */
+        .toast-msg { border-radius: 16px; padding: 10px 14px; font-size: 13px; font-weight: 600; text-align: center; margin: 10px 0; opacity: 0; transform: translateY(4px); transition: 0.2s; }
+        .toast-msg.show { opacity: 1; transform: none; }
+        .toast-msg.success { background: #e7faee; color: #189e46; }
+        .toast-msg.error { background: #fff0f0; color: #e02020; }
+
+        /* ── HEADER ── */
+        .dash-header { background: #fff; padding: 18px 20px 14px; border-bottom: 1px solid #eef3ff; }
+        .dash-header .top-row { display: flex; justify-content: space-between; align-items: center; }
+        .dash-header .user-name { font-size: 18px; font-weight: 800; color: #0a1a4a; }
+        .dash-header .user-id { font-size: 13px; color: #64789e; font-weight: 600; }
+        .dash-header .user-id span { background: #e8f0fe; padding: 2px 12px; border-radius: 999px; }
+        .dash-header .brand { font-weight: 900; color: #2a6aff; letter-spacing: 1px; font-size: 14px; }
+        .dash-header .quota-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 13px; color: #64789e; }
+        .dash-header .quota-row .quota-val { font-weight: 800; color: #0a1a4a; }
+        .dash-header .quota-row .reward { background: #e7faee; color: #189e46; padding: 2px 10px; border-radius: 999px; font-weight: 700; font-size: 12px; }
+        .dash-header .earnings-row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 13px; }
+        .dash-header .earnings-row .today { color: #64789e; }
+        .dash-header .earnings-row .today-amount { font-weight: 700; color: #189e46; }
+
+        /* ── STATS CARD ── */
+        .stats-card { background: #fff; margin: 12px 16px 0; border-radius: 24px; padding: 16px 18px; box-shadow: 0 2px 10px rgba(10,26,74,.06); display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+        .stats-card .stat-item { display: flex; flex-direction: column; }
+        .stats-card .stat-item .s-label { font-size: 11px; color: #64789e; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+        .stats-card .stat-item .s-value { font-size: 16px; font-weight: 800; color: #0a1a4a; margin-top: 2px; }
+        .stats-card .stat-item .s-value.green { color: #189e46; }
+
+        /* ── ACTION BUTTONS ── */
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 16px 0; }
+        .action-btn-big { background: #fff; border: 1px solid #e6edfb; border-radius: 24px; padding: 16px 8px; text-align: center; box-shadow: 0 2px 10px rgba(10,26,74,.06); cursor: pointer; transition: 0.2s; font-family: inherit; font-weight: 700; font-size: 14px; color: #0a1a4a; }
+        .action-btn-big:hover { border-color: #2a6aff; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(42,106,255,.32); }
+        .action-btn-big .icon { display: block; margin: 0 auto 8px; width: 42px; height: 42px; border-radius: 50%; background: #e8f0fe; display: flex; align-items: center; justify-content: center; color: #2a6aff; }
+        .action-btn-big .icon svg { width: 22px; height: 22px; }
+        .action-btn-big .label { font-size: 13px; font-weight: 700; }
+        .action-btn-big .sub { font-size: 11px; color: #64789e; font-weight: 500; }
+
+        /* ── BOTTOM NAV (4 tabs) ── */
+        .bottom-nav-wrap { padding: 12px 18px 18px; background: #fff; border-top: 1px solid #eef3ff; margin-top: auto; }
+        .nav-track { position: relative; display: flex; background: #f4f8ff; border-radius: 999px; padding: 5px; }
+        .nav-indicator { position: absolute; top: 5px; left: 5px; height: calc(100% - 10px); width: calc(25% - 7.5px); background: #fff; border-radius: 999px; box-shadow: 0 3px 10px rgba(10,26,74,.14); transition: transform .32s cubic-bezier(.4,0,.2,1); z-index: 0; }
+        .nav-btn { position: relative; z-index: 1; flex: 1; background: transparent; border: none; padding: 9px 4px; font-size: 10px; font-weight: 700; color: #64789e; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; font-family: inherit; transition: color .2s; }
+        .nav-btn.active { color: #2a6aff; }
+        .nav-btn svg { width: 20px; height: 20px; }
+
+        /* ── PAGES ── */
+        .pages { flex: 1; padding: 0 0 4px; overflow-y: auto; max-height: 470px; }
+        .page { padding: 4px 0 0; }
+        .page:not(.hidden) { animation: fadeIn .25s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        .page-hdr { display: flex; align-items: center; gap: 9px; font-size: 18px; font-weight: 800; color: #0a1a4a; margin: 10px 16px 16px; }
+        .page-hdr svg { color: #2a6aff; width: 20px; height: 20px; flex-shrink: 0; }
+
+        /* ── UPI LIST ── */
+        .upi-list-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #e6edfb; border-radius: 16px; padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 2px 10px rgba(10,26,74,.06); }
+        .upi-list-item .upi-detail { display: flex; flex-direction: column; }
+        .upi-list-item .upi-id { font-weight: 700; font-size: 14px; color: #0a1a4a; }
+        .upi-list-item .upi-range { font-size: 11px; color: #64789e; }
+        .upi-list-item .upi-status { font-weight: 700; font-size: 12px; padding: 2px 10px; border-radius: 999px; }
+        .upi-list-item .upi-status.enabled { background: #e7faee; color: #189e46; }
+        .upi-list-item .upi-status.failed { background: #fff0f0; color: #e02020; }
+        .add-upi-btn { width: 100%; padding: 12px; background: #2a6aff; border: none; border-radius: 999px; color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; transition: 0.2s; font-family: inherit; margin: 8px 0 16px; }
+        .add-upi-btn:hover { background: #1a4fd6; }
+
+        /* ── WITHDRAW SECTION ── */
+        .withdraw-section { background: #fff; border: 1px solid #e6edfb; border-radius: 24px; padding: 18px 16px; margin-top: 12px; box-shadow: 0 2px 10px rgba(10,26,74,.06); }
+        .withdraw-section .w-label { font-size: 12px; font-weight: 700; color: #64789e; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 6px; margin-top: 14px; }
+        .withdraw-section .w-label:first-child { margin-top: 0; }
+        .withdraw-section input, .withdraw-section select { width: 100%; padding: 14px 16px; background: #f4f8ff; border: 1.5px solid #d7e4fb; border-radius: 999px; font-size: 15px; color: #0a1a4a; font-family: inherit; outline: none; transition: 0.2s; }
+        .withdraw-section input:focus, .withdraw-section select:focus { border-color: #2a6aff; background: #fff; box-shadow: 0 0 0 4px rgba(42,106,255,.10); }
+        .withdraw-section .w-avail { font-size: 12px; color: #64789e; margin-top: 5px; font-weight: 500; }
+        .withdraw-section .w-amt-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0 14px; }
+        .withdraw-section .w-amt-btn { background: #fff; border: 1.5px solid #dbe6fb; border-radius: 16px; padding: 12px 4px; font-size: 14px; font-weight: 700; color: #0a1a4a; cursor: pointer; transition: 0.2s; font-family: inherit; box-shadow: 0 2px 10px rgba(10,26,74,.06); }
+        .withdraw-section .w-amt-btn:hover, .withdraw-section .w-amt-btn.selected { background: linear-gradient(135deg, #2a6aff, #1a4fd6); border-color: #2a6aff; color: #fff; transform: scale(1.03); box-shadow: 0 6px 18px rgba(42,106,255,.32); }
+
+        /* ── TRANSACTION LIST ── */
+        .tx-list { display: flex; flex-direction: column; gap: 8px; margin: 0 16px 18px; }
+        .tx-item { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid #e9eefb; border-radius: 16px; padding: 12px 14px; box-shadow: 0 2px 10px rgba(10,26,74,.06); }
+        .tx-icon { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; }
+        .tx-icon.dep { background: linear-gradient(135deg, #1a8a3a, #2fbf5a); }
+        .tx-icon.wd { background: linear-gradient(135deg, #2a6aff, #1a4fd6); }
+        .tx-info { flex: 1; min-width: 0; }
+        .tx-title { font-size: 14px; font-weight: 700; color: #0a1a4a; }
+        .tx-time { font-size: 11px; color: #64789e; margin-top: 1px; }
+        .tx-right { text-align: right; flex-shrink: 0; }
+        .tx-amt { font-size: 14px; font-weight: 700; color: #0a1a4a; }
+        .tx-status { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; margin-top: 2px; }
+        .tx-status.success { color: #189e46; }
+        .tx-status.pending { color: #b06000; }
+        .tx-status.rejected { color: #e02020; }
+        .tx-empty { font-size: 13px; color: #64789e; text-align: center; padding: 24px 14px; background: #f4f8ff; border-radius: 16px; border: 1.5px dashed #d0dff8; line-height: 1.5; }
+
+        /* ── ASSETS PAGE ── */
+        .assets-grid { background: #fff; border: 1px solid #eef3ff; border-radius: 24px; padding: 16px 18px; margin: 0 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+        .assets-grid .ast-item { display: flex; flex-direction: column; }
+        .assets-grid .ast-item .ast-label { font-size: 11px; color: #64789e; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+        .assets-grid .ast-item .ast-value { font-size: 16px; font-weight: 800; color: #0a1a4a; margin-top: 2px; }
+        .assets-grid .ast-item .ast-value.green { color: #189e46; }
+
+        .reg-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #2a6aff, #1a4fd6); border: none; border-radius: 999px; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer; transition: 0.2s; box-shadow: 0 6px 18px rgba(42,106,255,.32); font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .reg-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+        .reg-btn:active { transform: scale(.97); }
+        .reg-btn:disabled { background: #b8cef0; box-shadow: none; cursor: not-allowed; transform: none; filter: none; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media(max-width:380px) { .stats-card { grid-template-columns: 1fr 1fr; gap: 8px; } .assets-grid { grid-template-columns: 1fr 1fr; } }
+
+        /* ── AUTH SCREEN ── */
+        .auth-wrap { padding: 40px 26px 32px; }
+        .auth-brand { text-align: center; font-weight: 900; color: #2a6aff; letter-spacing: 1.5px; font-size: 22px; margin-bottom: 4px; }
+        .auth-tag { text-align: center; color: #64789e; font-size: 13px; margin-bottom: 28px; }
+        .auth-tabs { display: flex; background: #f4f8ff; border-radius: 999px; padding: 4px; margin-bottom: 22px; }
+        .auth-tab { flex: 1; border: none; background: transparent; padding: 10px 4px; border-radius: 999px; font-family: inherit; font-weight: 700; font-size: 14px; color: #64789e; cursor: pointer; transition: 0.2s; }
+        .auth-tab.active { background: #fff; color: #2a6aff; box-shadow: 0 3px 10px rgba(10,26,74,.12); }
+        .auth-field-label { font-size: 12px; font-weight: 700; color: #64789e; text-transform: uppercase; letter-spacing: .6px; margin: 14px 0 6px; }
+        .auth-field-label:first-child { margin-top: 0; }
+        .auth-wrap input { width: 100%; padding: 14px 16px; background: #f4f8ff; border: 1.5px solid #d7e4fb; border-radius: 999px; font-size: 15px; color: #0a1a4a; font-family: inherit; outline: none; transition: 0.2s; }
+        .auth-wrap input:focus { border-color: #2a6aff; background: #fff; box-shadow: 0 0 0 4px rgba(42,106,255,.10); }
+        .auth-submit { margin-top: 22px; }
+        .auth-switch-note { text-align: center; font-size: 12px; color: #64789e; margin-top: 16px; }
+
+        /* ── HEADER LOGOUT ── */
+        .logout-chip { background: #f4f8ff; border: 1px solid #e6edfb; color: #64789e; font-family: inherit; font-weight: 700; font-size: 11px; padding: 5px 12px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: 0.2s; }
+        .logout-chip:hover { border-color: #e02020; color: #e02020; }
+        .logout-chip svg { width: 12px; height: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="app" id="app">
+    <!-- AUTH SCREEN (Login / Register) -->
+    <div id="authScreen">
+        <div class="auth-wrap">
+            <div class="auth-brand">XY PAY</div>
+            <div class="auth-tag">Login or create an account to continue</div>
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="authTabLogin" data-tab="login">Login</button>
+                <button class="auth-tab" id="authTabRegister" data-tab="register">Register</button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <div id="loginForm">
+                <div class="auth-field-label">Phone Number</div>
+                <input type="tel" id="loginPhone" placeholder="10-digit phone number" maxlength="10" inputmode="numeric" />
+                <div class="auth-field-label">Password</div>
+                <input type="password" id="loginPassword" placeholder="Enter password" />
+                <button class="reg-btn auth-submit" id="loginBtn">Login</button>
+                <div class="toast-msg" id="loginStatus"></div>
+            </div>
+
+            <!-- REGISTER FORM -->
+            <div id="registerForm" class="hidden">
+                <div class="auth-field-label">Full Name</div>
+                <input type="text" id="regName" placeholder="Your name" />
+                <div class="auth-field-label">Phone Number</div>
+                <input type="tel" id="regPhone" placeholder="10-digit phone number" maxlength="10" inputmode="numeric" />
+                <div class="auth-field-label">Password</div>
+                <input type="password" id="regPassword" placeholder="Create a password" />
+                <div class="auth-field-label">Confirm Password</div>
+                <input type="password" id="regPasswordConfirm" placeholder="Re-enter password" />
+                <button class="reg-btn auth-submit" id="registerBtn">Create Account</button>
+                <div class="toast-msg" id="registerStatus"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainScreen" class="hidden">
+        <!-- HEADER -->
+        <div class="dash-header">
+            <div class="top-row">
+                <div class="user-name" id="displayUser">User</div>
+                <div class="brand">XY PAY</div>
+            </div>
+            <div class="top-row" style="margin-top:6px;">
+                <div class="user-id">ID <span id="userIdDisplay">000000</span></div>
+                <button class="logout-chip" id="logoutBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Logout
+                </button>
+            </div>
+            <div class="quota-row">
+                <span>Quota (₹) <span class="reward">Reward = 8%</span></span>
+                <span class="quota-val" id="quotaAmount">0.00</span>
+            </div>
+            <div class="earnings-row">
+                <span class="today">Today's earnings:</span>
+                <span class="today-amount" id="todayEarnings">+0.00</span>
+            </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-card">
+            <div class="stat-item"><span class="s-label">In Process Amount</span><span class="s-value" id="inProcessAmount">₹ 0.00</span></div>
+            <div class="stat-item"><span class="s-label">Commission Rate</span><span class="s-value green">8%</span></div>
+            <div class="stat-item"><span class="s-label">In Process Orders</span><span class="s-value" id="inProcessOrders">0</span></div>
+            <div class="stat-item"><span class="s-label">Estimated Income</span><span class="s-value" id="estimatedIncome">₹ 0.00</span></div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="action-grid">
+            <button class="action-btn-big" id="qaDeposit">
+                <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+                <span class="label">Deposit</span>
+                <span class="sub">Add funds</span>
+            </button>
+            <button class="action-btn-big" id="qaUpi">
+                <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></span>
+                <span class="label">Link UPI</span>
+                <span class="sub">Manage & withdraw</span>
+            </button>
+        </div>
+
+        <!-- PAGES -->
+        <div class="pages">
+            <div class="page" id="homePage"></div>
+
+            <!-- DEPOSIT PAGE -->
+            <div class="page hidden" id="depositPage">
+                <div class="page-hdr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Deposit</div>
+                <div class="withdraw-section" style="margin:0 16px;">
+                    <div class="w-label" style="margin-top:0;">Enter Amount</div>
+                    <div class="w-amt-grid" id="depAmtGrid">
+                        <button class="w-amt-btn" data-amount="500">500</button>
+                        <button class="w-amt-btn" data-amount="1000">1K</button>
+                        <button class="w-amt-btn" data-amount="2000">2K</button>
+                        <button class="w-amt-btn" data-amount="5000">5K</button>
+                        <button class="w-amt-btn" data-amount="10000">10K</button>
+                        <button class="w-amt-btn" data-amount="20000">20K</button>
+                        <button class="w-amt-btn" data-amount="50000">50K</button>
+                        <button class="w-amt-btn" data-amount="100000">1L</button>
+                    </div>
+                    <input type="number" id="depositAmount" placeholder="Enter amount" min="100" />
+                    <div class="w-avail">You will receive <span id="depCommPreview">8%</span> commission on this deposit.</div>
+                    <button class="reg-btn" id="openDepositPageBtn" style="margin-top:14px;">Proceed to Pay</button>
+                    <div class="toast-msg" id="depositStatus"></div>
+                </div>
+            </div>
+
+            <!-- UPI PAGE -->
+            <div class="page hidden" id="upiPage">
+                <div class="page-hdr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>Link UPI</div>
+                <div style="padding:0 16px;">
+                    <div id="upiListContainer"></div>
+                    <button class="add-upi-btn" id="addUpiBtn">+ Add UPI</button>
+
+                    <div class="withdraw-section">
+                        <div class="w-label">Withdraw to UPI</div>
+                        <select id="withdrawUpiSelect"><option value="">Select UPI ID</option></select>
+                        <div class="w-label" style="margin-top:14px;">Amount</div>
+                        <div class="w-amt-grid" id="wAmtGrid">
+                            <button class="w-amt-btn" data-amount="100">100</button>
+                            <button class="w-amt-btn" data-amount="5000">5K</button>
+                            <button class="w-amt-btn" data-amount="10000">10K</button>
+                            <button class="w-amt-btn" data-amount="15000">15K</button>
+                            <button class="w-amt-btn" data-amount="20000">20K</button>
+                            <button class="w-amt-btn" data-amount="30000">30K</button>
+                            <button class="w-amt-btn" data-amount="40000">40K</button>
+                            <button class="w-amt-btn" data-amount="50000">50K</button>
+                        </div>
+                        <input type="number" id="withdrawAmount" placeholder="Enter amount" min="100" />
+                        <div class="w-avail" id="wAvailLabel">Available: ₹0.00</div>
+                        <button class="reg-btn" id="withdrawBtn" style="margin-top:12px;">Withdraw</button>
+                        <div class="toast-msg" id="withdrawStatus"></div>
+                    </div>
+
+                    <div class="sec-label" style="margin-top:18px;font-weight:700;color:#64789e;text-transform:uppercase;font-size:11px;letter-spacing:1px;">Withdrawal History</div>
+                    <div class="tx-list" id="withdrawHistoryList">
+                        <div class="tx-empty">No withdrawal history yet.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ASSETS PAGE -->
+            <div class="page hidden" id="assetsPage">
+                <div class="page-hdr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Assets</div>
+                <div class="assets-grid">
+                    <div class="ast-item"><span class="ast-label">Quota (₹)</span><span class="ast-value" id="assetQuota">0.00</span></div>
+                    <div class="ast-item"><span class="ast-label">Total Deposited</span><span class="ast-value" id="assetDeposited">₹ 0.00</span></div>
+                    <div class="ast-item"><span class="ast-label">Commission Earned</span><span class="ast-value green" id="assetCommission">₹ 0.00</span></div>
+                    <div class="ast-item"><span class="ast-label">Pending Withdrawals</span><span class="ast-value" id="assetPendingWd">₹ 0.00</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAV (4 tabs) -->
+        <div class="bottom-nav-wrap">
+            <div class="nav-track">
+                <div class="nav-indicator" id="navIndicator"></div>
+                <button class="nav-btn active" id="navHome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+                <button class="nav-btn" id="navDeposit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>Deposit</button>
+                <button class="nav-btn" id="navUpi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>UPI</button>
+                <button class="nav-btn" id="navAssets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Assets</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+
+        const $ = id => document.getElementById(id);
+        const toast = (id, msg, type) => {
+            const el = $(id);
+            if (!el) return;
+            el.textContent = msg;
+            el.className = 'toast-msg ' + type;
+            void el.offsetWidth;
+            el.classList.add('show');
+            if (type !== 'error') setTimeout(() => el.classList.remove('show'), 3200);
+        };
+
+        // ── DB ──
+        const DB_KEY = 'exodus_db';
+        function getDB() {
+            try {
+                const raw = localStorage.getItem(DB_KEY);
+                if (raw) return JSON.parse(raw);
+            } catch (e) {}
+            return { users: {}, currentPhone: null };
+        }
+        function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+        // ── SETTINGS (set by admin) ──
+        const SETTINGS_KEY = 'exodus_settings';
+        function getSettings() {
+            try {
+                const raw = localStorage.getItem(SETTINGS_KEY);
+                if (raw) return JSON.parse(raw);
+            } catch (e) {}
+            return { upiId: 'masarat.jaha01@ptyes', commissionRate: 8 };
+        }
+
+        // ── SESSION ──
+        let currentPhone = null;
+        let userData = null;
+
+        // ── RENDER ──
+        function renderDashboard() {
+            if (!userData) return;
+            $('displayUser').textContent = userData.username || 'User';
+            $('userIdDisplay').textContent = userData.userId || '000000';
+
+            const quota = userData.quota || 0;
+            $('quotaAmount').textContent = quota.toFixed(2);
+            $('todayEarnings').textContent = ((userData.todayEarnings || 0) >= 0 ? '+' : '') + (userData.todayEarnings || 0)
+                .toFixed(2);
+
+            const settings = getSettings();
+            const commRate = (settings.commissionRate != null ? settings.commissionRate : 8) / 100;
+
+            const pendingAmt = userData.pendingDepositAmount || 0;
+            const pendingOrders = userData.pendingDepositCount || 0;
+            $('inProcessAmount').textContent = '₹ ' + pendingAmt.toFixed(2);
+            $('inProcessOrders').textContent = pendingOrders;
+            $('estimatedIncome').textContent = '₹ ' + (pendingAmt * commRate).toFixed(2);
+            const depCommEl = $('depCommPreview');
+            if (depCommEl) depCommEl.textContent = (commRate * 100) + '%';
+
+            // Available balance for withdrawal must exclude amounts already requested/pending
+            const bal = userData.balance || 0;
+            const pendingWd = userData.pendingWithdraw || 0;
+            const availableForWithdraw = Math.max(0, bal - pendingWd);
+            $('wAvailLabel').textContent = 'Available: ₹' + availableForWithdraw.toFixed(2) + (pendingWd > 0 ? ' (₹' + pendingWd.toFixed(2) + ' pending)' : '');
+
+            renderUpiList();
+            renderWithdrawHistory();
+
+            $('assetQuota').textContent = quota.toFixed(2);
+            $('assetDeposited').textContent = '₹ ' + (userData.depositTotal || 0).toFixed(2);
+            $('assetCommission').textContent = '₹ ' + (userData.commissionTotal || 0).toFixed(2);
+            $('assetPendingWd').textContent = '₹ ' + (userData.pendingWithdraw || 0).toFixed(2);
+        }
+
+        // ── UPI LIST ──
+        function renderUpiList() {
+            const upis = userData.upiList || [];
+            const container = $('upiListContainer');
+            let html = '';
+            upis.forEach((u, idx) => {
+                const statusClass = u.status === 'enabled' ? 'enabled' : 'failed';
+                const statusLabel = u.status === 'enabled' ? 'Enabled' : 'Failed';
+                html += `
+                    <div class="upi-list-item">
+                        <div class="upi-detail">
+                            <span class="upi-id">${u.upi}</span>
+                            <span class="upi-range">LimitedRange: ${u.min || '50.00'} ~ ${u.max || '1000000.00'}</span>
+                        </div>
+                        <div>
+                            <span class="upi-status ${statusClass}">${statusLabel}</span>
+                            <button style="background:transparent;border:none;color:#e02020;cursor:pointer;font-size:16px;margin-left:6px;" data-idx="${idx}" data-action="remove">×</button>
+                        </div>
+                    </div>
+                `;
+            });
+            if (upis.length === 0) html = '<p style="color:#64789e;text-align:center;padding:12px 0;">No UPI linked yet.</p>';
+            container.innerHTML = html;
+
+            // Update select options
+            const select = $('withdrawUpiSelect');
+            select.innerHTML = '<option value="">Select UPI ID</option>';
+            upis.forEach(u => {
+                if (u.status === 'enabled') {
+                    const opt = document.createElement('option');
+                    opt.value = u.upi;
+                    opt.textContent = u.upi;
+                    select.appendChild(opt);
+                }
+            });
+
+            document.querySelectorAll('[data-action="remove"]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const idx = parseInt(this.dataset.idx);
+                    userData.upiList.splice(idx, 1);
+                    saveUserData();
+                    renderDashboard();
+                });
+            });
+        }
+
+        // ── WITHDRAWAL HISTORY ──
+        function renderWithdrawHistory() {
+            const wd = userData.withdrawals || [];
+            const list = $('withdrawHistoryList');
+            if (wd.length === 0) {
+                list.innerHTML = '<div class="tx-empty">No withdrawal history yet.</div>';
+                return;
+            }
+            list.innerHTML = wd.slice().reverse().map(w => {
+                const st = w.status || 'pending';
+                const stCls = st === 'success' ? 'success' : st === 'rejected' ? 'rejected' : 'pending';
+                const stLbl = st === 'success' ? 'Success' : st === 'rejected' ? 'Rejected' : 'Processing';
+                const tm = w.time ? new Date(w.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '';
+                return `<div class="tx-item"><div class="tx-icon wd">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                </div><div class="tx-info"><div class="tx-title">Withdrawal</div><div class="tx-time">${tm}</div></div>
+                <div class="tx-right"><div class="tx-amt">-₹${(w.amount||0).toFixed(2)}</div>
+                <div class="tx-status ${stCls}">${stLbl}</div></div></div>`;
+            }).join('');
+        }
+
+        // ── SAVE ──
+        function saveUserData() {
+            const db = getDB();
+            db.users[currentPhone] = userData;
+            saveDB(db);
+        }
+
+        // ── CHECK PENDING DEPOSITS (from deposit.html) ──
+        function checkPendingDeposits() {
+            if (!currentPhone || !userData) return;
+            try {
+                const raw = localStorage.getItem('exodus_pending_deposit');
+                if (!raw) return;
+                const pending = JSON.parse(raw);
+                if (!pending.length) return;
+                let updated = false;
+                const remaining = [];
+                pending.forEach(d => {
+                    if (d.status === 'submitted' && d.amount && d.utr && d.phone === currentPhone) {
+                        userData.pendingDeposits = userData.pendingDeposits || [];
+                        userData.pendingDeposits.push({
+                            amount: d.amount,
+                            commission: d.comm || Math.floor(d.amount * 0.08),
+                            utr: d.utr,
+                            time: d.time || new Date().toISOString(),
+                            status: 'pending'
+                        });
+                        userData.transactions = userData.transactions || [];
+                        userData.transactions.push({
+                            type: 'dep',
+                            amount: d.amount + (d.comm || Math.floor(d.amount * 0.08)),
+                            status: 'pending',
+                            time: d.time || new Date().toISOString(),
+                            utr: d.utr
+                        });
+                        userData.pendingDepositAmount = (userData.pendingDepositAmount || 0) + d.amount;
+                        userData.pendingDepositCount = (userData.pendingDepositCount || 0) + 1;
+                        updated = true;
+                    } else {
+                        remaining.push(d);
+                    }
+                });
+                if (updated) {
+                    localStorage.setItem('exodus_pending_deposit', JSON.stringify(remaining));
+                    saveUserData();
+                    renderDashboard();
+                }
+            } catch (e) {}
+        }
+
+        // ── ADD UPI ──
+        function addUpi() {
+            const newUpi = prompt('Enter UPI ID (e.g., name@bank)');
+            if (!newUpi) return;
+            if (!/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(newUpi)) {
+                alert('Invalid UPI format. Use name@bank');
+                return;
+            }
+            const upiList = userData.upiList || [];
+            if (upiList.find(u => u.upi === newUpi)) {
+                alert('UPI already exists.');
+                return;
+            }
+            upiList.push({ upi: newUpi, status: 'enabled', min: 50, max: 1000000 });
+            userData.upiList = upiList;
+            saveUserData();
+            renderDashboard();
+        }
+
+        // ── WITHDRAW ──
+        function handleWithdraw() {
+            const upi = $('withdrawUpiSelect').value;
+            const amt = parseFloat($('withdrawAmount').value);
+            if (!upi) { toast('withdrawStatus', 'Select a UPI ID', 'error'); return; }
+            if (isNaN(amt) || amt < 100) { toast('withdrawStatus', 'Minimum withdrawal is ₹100', 'error'); return; }
+            const availableForWithdraw = Math.max(0, (userData.balance || 0) - (userData.pendingWithdraw || 0));
+            if (!userData || amt > availableForWithdraw) { toast('withdrawStatus', 'Insufficient available balance', 'error'); return; }
+
+            const btn = $('withdrawBtn');
+            const orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:spin .8s linear infinite;vertical-align:-3px;margin-right:6px;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>Submitting...';
+            setTimeout(() => {
+                userData.pendingWithdraw = (userData.pendingWithdraw || 0) + amt;
+                userData.transactions.push({ type: 'wd', amount: amt, status: 'pending', time: new Date().toISOString(), upi: upi });
+                userData.withdrawals = userData.withdrawals || [];
+                userData.withdrawals.push({ amount: amt, upi: upi, status: 'pending', time: new Date().toISOString() });
+                saveUserData();
+                btn.disabled = false;
+                btn.innerHTML = orig;
+                $('withdrawAmount').value = '';
+                document.querySelectorAll('.w-amt-btn').forEach(b => b.classList.remove('selected'));
+                toast('withdrawStatus', 'Withdrawal request submitted — waiting for admin approval', 'success');
+                renderDashboard();
+            }, 800);
+        }
+
+        // ── OPEN DEPOSIT PAGE ──
+        function openDepositPage() {
+            const amt = parseFloat($('depositAmount').value);
+            if (isNaN(amt) || amt < 100) {
+                toast('depositStatus', 'Enter a valid amount (minimum ₹100)', 'error');
+                return;
+            }
+            window.open('deposit.html?amount=' + encodeURIComponent(amt) + '&phone=' + encodeURIComponent(currentPhone), '_blank');
+        }
+
+        // ── NAVIGATION ──
+        const pageIds = ['homePage', 'depositPage', 'upiPage', 'assetsPage'];
+        const navIds = ['navHome', 'navDeposit', 'navUpi', 'navAssets'];
+
+        function showPage(pageId) {
+            pageIds.forEach(p => { const el = $(p); if (el) el.classList.add('hidden'); });
+            navIds.forEach(n => { const el = $(n); if (el) el.classList.remove('active'); });
+            const pageEl = $(pageId);
+            if (pageEl) pageEl.classList.remove('hidden');
+
+            const idxMap = { 'homePage': 0, 'depositPage': 1, 'upiPage': 2, 'assetsPage': 3 };
+            const navIdx = idxMap[pageId] !== undefined ? idxMap[pageId] : 0;
+            const navBtn = $(navIds[navIdx]);
+            if (navBtn) navBtn.classList.add('active');
+            const indicator = $('navIndicator');
+            if (indicator) indicator.style.transform = 'translateX(' + (navIdx * 100) + '%)';
+
+            if (pageId === 'upiPage') renderDashboard();
+            renderDashboard();
+        }
+
+        // ── EVENT BINDING ──
+        $('navHome').addEventListener('click', () => showPage('homePage'));
+        $('navDeposit').addEventListener('click', () => showPage('depositPage'));
+        $('navUpi').addEventListener('click', () => showPage('upiPage'));
+        $('navAssets').addEventListener('click', () => showPage('assetsPage'));
+
+        $('qaDeposit').addEventListener('click', () => showPage('depositPage'));
+        $('qaUpi').addEventListener('click', () => showPage('upiPage'));
+        $('openDepositPageBtn').addEventListener('click', openDepositPage);
+        $('addUpiBtn').addEventListener('click', addUpi);
+
+        $('depAmtGrid').addEventListener('click', e => {
+            const btn = e.target.closest('.w-amt-btn');
+            if (!btn) return;
+            document.querySelectorAll('#depAmtGrid .w-amt-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            $('depositAmount').value = parseInt(btn.dataset.amount);
+        });
+        $('depositAmount').addEventListener('input', function() {
+            document.querySelectorAll('#depAmtGrid .w-amt-btn').forEach(b => b.classList.remove('selected'));
+        });
+
+        $('wAmtGrid').addEventListener('click', e => {
+            const btn = e.target.closest('.w-amt-btn');
+            if (!btn) return;
+            document.querySelectorAll('#wAmtGrid .w-amt-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            $('withdrawAmount').value = parseInt(btn.dataset.amount);
+        });
+        $('withdrawAmount').addEventListener('input', function() {
+            document.querySelectorAll('#wAmtGrid .w-amt-btn').forEach(b => b.classList.remove('selected'));
+        });
+        $('withdrawBtn').addEventListener('click', handleWithdraw);
+
+        $('logoutBtn').addEventListener('click', logout);
+
+        // ── AUTH HELPERS ──
+        function genUserId() { return String(Math.floor(100000 + Math.random() * 900000)); }
+        function isValidPhone(p) { return /^[6-9]\d{9}$/.test(p); }
+
+        function showAuthScreen() {
+            $('authScreen').classList.remove('hidden');
+            $('mainScreen').classList.add('hidden');
+        }
+
+        function enterApp(phone) {
+            const db = getDB();
+            db.currentPhone = phone;
+            saveDB(db);
+            currentPhone = phone;
+            userData = db.users[phone];
+            $('authScreen').classList.add('hidden');
+            $('mainScreen').classList.remove('hidden');
+            checkPendingDeposits();
+            renderDashboard();
+            showPage('homePage');
+        }
+
+        function logout() {
+            const db = getDB();
+            db.currentPhone = null;
+            saveDB(db);
+            currentPhone = null;
+            userData = null;
+            $('loginPhone').value = '';
+            $('loginPassword').value = '';
+            showAuthScreen();
+        }
+
+        // ── AUTH TABS ──
+        $('authTabLogin').addEventListener('click', () => {
+            $('authTabLogin').classList.add('active');
+            $('authTabRegister').classList.remove('active');
+            $('loginForm').classList.remove('hidden');
+            $('registerForm').classList.add('hidden');
+        });
+        $('authTabRegister').addEventListener('click', () => {
+            $('authTabRegister').classList.add('active');
+            $('authTabLogin').classList.remove('active');
+            $('registerForm').classList.remove('hidden');
+            $('loginForm').classList.add('hidden');
+        });
+
+        // ── LOGIN ──
+        $('loginBtn').addEventListener('click', () => {
+            const phone = $('loginPhone').value.trim();
+            const pass = $('loginPassword').value;
+            if (!isValidPhone(phone)) { toast('loginStatus', 'Enter a valid 10-digit phone number', 'error'); return; }
+            if (!pass) { toast('loginStatus', 'Enter your password', 'error'); return; }
+            const db = getDB();
+            const user = db.users[phone];
+            if (!user || user.password !== pass) { toast('loginStatus', 'Invalid phone number or password', 'error'); return; }
+            enterApp(phone);
+        });
+
+        // ── REGISTER ──
+        $('registerBtn').addEventListener('click', () => {
+            const name = $('regName').value.trim();
+            const phone = $('regPhone').value.trim();
+            const pass = $('regPassword').value;
+            const confirm = $('regPasswordConfirm').value;
+            if (!name) { toast('registerStatus', 'Enter your full name', 'error'); return; }
+            if (!isValidPhone(phone)) { toast('registerStatus', 'Enter a valid 10-digit phone number', 'error'); return; }
+            if (!pass || pass.length < 4) { toast('registerStatus', 'Password must be at least 4 characters', 'error'); return; }
+            if (pass !== confirm) { toast('registerStatus', 'Passwords do not match', 'error'); return; }
+
+            const db = getDB();
+            if (db.users[phone]) { toast('registerStatus', 'This phone number is already registered', 'error'); return; }
+
+            db.users[phone] = {
+                phone: phone,
+                password: pass,
+                username: name,
+                userId: genUserId(),
+                quota: 0,
+                todayEarnings: 0,
+                balance: 0,
+                depositTotal: 0,
+                commissionTotal: 0,
+                pendingWithdraw: 0,
+                pendingDepositAmount: 0,
+                pendingDepositCount: 0,
+                upiList: [],
+                transactions: [],
+                withdrawals: [],
+                pendingDeposits: []
+            };
+            saveDB(db);
+            toast('registerStatus', 'Account created! Logging you in…', 'success');
+            setTimeout(() => enterApp(phone), 600);
+        });
+
+        [$('loginPhone'), $('loginPassword')].forEach(el => {
+            el.addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
+        });
+
+        // ── INIT ──
+        function init() {
+            const db = getDB();
+            if (db.currentPhone && db.users[db.currentPhone]) {
+                enterApp(db.currentPhone);
+            } else {
+                showAuthScreen();
+            }
+
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'exodus_pending_deposit') {
+                    checkPendingDeposits();
+                }
+            });
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>
