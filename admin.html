@@ -610,6 +610,21 @@
 
             adminPass.addEventListener('keydown', e => { if (e.key === 'Enter') adminLoginBtn.click(); });
             adminUser.addEventListener('keydown', e => { if (e.key === 'Enter') adminLoginBtn.click(); });
+
+            // ── LIVE SYNC (pick up new deposit/withdraw requests without a manual reload) ──
+            function isDashboardVisible() { return !dashboard.classList.contains('hidden'); }
+            window.addEventListener('storage', function(e) {
+                if (isDashboardVisible() && (e.key === DB_KEY || e.key === 'exodus_pending_deposit')) refreshDashboard();
+            });
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden && isDashboardVisible()) refreshDashboard();
+            });
+            window.addEventListener('focus', function() {
+                if (isDashboardVisible()) refreshDashboard();
+            });
+            setInterval(function() {
+                if (isDashboardVisible()) refreshDashboard();
+            }, 4000);
         })();
     </script>
 </body>

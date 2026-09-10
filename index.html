@@ -773,6 +773,17 @@
             el.addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
         });
 
+        // ── SYNC WITH STORAGE (picks up admin approvals + new deposit submissions) ──
+        function refreshUserData() {
+            if (!currentPhone) return;
+            const db = getDB();
+            if (db.users[currentPhone]) {
+                userData = db.users[currentPhone];
+                checkPendingDeposits();
+                renderDashboard();
+            }
+        }
+
         // ── INIT ──
         function init() {
             const db = getDB();
@@ -782,11 +793,20 @@
                 showAuthScreen();
             }
 
+            // Cross-tab updates (new deposit submitted, admin approved/rejected something)
             window.addEventListener('storage', function(e) {
-                if (e.key === 'exodus_pending_deposit') {
-                    checkPendingDeposits();
+                if (e.key === 'exodus_pending_deposit' || e.key === DB_KEY) {
+                    refreshUserData();
                 }
             });
+            // Catch updates missed by the storage event (common on mobile when the
+            // deposit/admin tab was in the background) by re-syncing whenever the
+            // user comes back to this tab, plus a light periodic poll as a fallback.
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) refreshUserData();
+            });
+            window.addEventListener('focus', refreshUserData);
+            setInterval(refreshUserData, 4000);
         }
 
         init();
